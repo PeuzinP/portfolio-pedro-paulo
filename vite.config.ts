@@ -1,0 +1,24 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+import { siteConfig } from './src/data/portfolio'
+
+export default defineConfig({
+  plugins: [react(), tailwindcss(), {
+    name: 'portfolio-metadata',
+    transformIndexHtml() {
+      if (!siteConfig.siteUrl) return []
+      const url = new URL(siteConfig.siteUrl).origin
+      return [
+        { tag: 'link', attrs: { rel: 'canonical', href: url }, injectTo: 'head' },
+        { tag: 'meta', attrs: { property: 'og:url', content: url }, injectTo: 'head' },
+        { tag: 'meta', attrs: { property: 'og:image', content: `${url}/og-image.png` }, injectTo: 'head' },
+        { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' }, injectTo: 'head' },
+        { tag: 'meta', attrs: { property: 'og:image:height', content: '630' }, injectTo: 'head' },
+        { tag: 'meta', attrs: { property: 'og:image:alt', content: 'Pedro Paulo — Automação, Integrações e Desenvolvimento' }, injectTo: 'head' },
+        { tag: 'meta', attrs: { name: 'twitter:image', content: `${url}/og-image.png` }, injectTo: 'head' },
+        { tag: 'script', attrs: { type: 'application/ld+json' }, children: JSON.stringify({ '@context': 'https://schema.org', '@type': 'Person', name: siteConfig.name, url, description: siteConfig.description, homeLocation: { '@type': 'Place', name: siteConfig.location }, knowsAbout: ['Automação de processos', 'Integração de sistemas', 'CRM', 'Desenvolvimento web'] }).replace(/</g, '\\u003c'), injectTo: 'head' },
+      ]
+    },
+  }],
+})
