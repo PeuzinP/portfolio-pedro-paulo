@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { ArrowDown, ArrowRight, ArrowUpRight, Braces, BriefcaseBusiness, Check, ChevronUp, Code2, Database, FileDown, Github, GraduationCap, Linkedin, Mail, MapPin, Menu, MessageCircle, Network, Terminal, Workflow, X } from 'lucide-react'
+import { ArrowDown, ArrowRight, ArrowUpRight, Braces, BriefcaseBusiness, Check, ChevronUp, Code2, Database, FileDown, Github, GraduationCap, Instagram, Linkedin, Mail, MapPin, Menu, MessageCircle, Network, Terminal, Workflow, X } from 'lucide-react'
 import { projects, siteConfig, skills, technicalEducation } from './data/portfolio'
 import type { Project } from './data/portfolio'
 import FlowDiagram from './components/FlowDiagram'
@@ -52,6 +52,7 @@ function ContactLinks() {
   const links = [
     { label: 'E-mail', href: c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email) ? `mailto:${c.email}` : '', icon: Mail },
     { label: 'LinkedIn', href: safeUrl(c.linkedin), icon: Linkedin },
+    { label: 'Instagram', href: safeUrl(c.instagram), icon: Instagram },
     { label: 'GitHub', href: safeUrl(c.github), icon: Github },
     { label: 'WhatsApp', href: /^\+?[\d\s()-]{10,20}$/.test(c.whatsapp) ? `https://wa.me/${c.whatsapp.replace(/\D/g, '')}` : '', icon: MessageCircle },
     { label: 'Currículo', href: safeUrl(c.resume), icon: FileDown },

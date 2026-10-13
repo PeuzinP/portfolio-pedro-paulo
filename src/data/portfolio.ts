@@ -8,6 +8,7 @@ export const siteConfig = {
   contacts: {
     email: 'ppmendes1519@gmail.com',
     linkedin: 'https://www.linkedin.com/in/pedro-mendes-720830270/',
+    instagram: 'https://www.instagram.com/_ppmendes/',
     github: '',
     whatsapp: '+55 (86) 98141-9738',
     resume: '',
