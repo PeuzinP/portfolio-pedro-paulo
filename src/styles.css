@@ -323,3 +323,10 @@ svg { flex-shrink:0; }
 .education .technical-education strong { line-height:1.6; margin:0; }
 .education .technical-education span { line-height:1.6; }
 .education .education-completed { color:#82ded1; }
+
+.university-education { display:flex; align-items:flex-start; gap:14px; margin-top:20px; }
+.university-logo { flex:0 0 120px; display:flex; align-items:center; justify-content:center; min-height:52px; padding:8px; background:#fff; border-radius:6px; }
+.university-logo img { width:104px; height:36px; object-fit:contain; }
+.education .university-education strong { margin:0; line-height:1.6; }
+.education .university-education span { line-height:1.6; }
+@media(max-width:480px) { .university-education { flex-direction:column; gap:10px; }.university-logo { flex-basis:auto; width:120px; } }

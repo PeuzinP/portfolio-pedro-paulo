@@ -62,3 +62,8 @@ tests/portfolio.spec.ts      Testes das jornadas principais
 ```
 
 Para gerar novamente a imagem de compartilhamento e as capturas de conferência, mantenha o servidor local na porta 5173 e execute `node scripts/preview-capture.mjs` (Google Chrome necessário).
+
+## Logos das instituições
+
+Logos locais em `public/anhanguera.png` e `public/estacio.svg`, exibidas apenas para identificar as formações.
+Fontes: [Anhanguera / Brandlogos](https://brandlogos.net/anhanguera-educacional-111817.html) e [Estácio — site institucional](https://estacio.br).
