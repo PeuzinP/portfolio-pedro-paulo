@@ -17,7 +17,7 @@ test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Transformo processos manuais')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Olá, sou Pedro Paulo.')
 })
 
 const intentions = [

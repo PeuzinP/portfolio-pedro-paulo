@@ -8,6 +8,7 @@ import FlowDiagram from './components/FlowDiagram'
 import ProjectVisual from './components/ProjectVisual'
 import ProjectDialog from './components/ProjectDialog'
 import AutomationDemo from './components/AutomationDemo'
+import PixelAvatar from './components/PixelAvatar'
 
 const navigation = [{ id: 'inicio', label: 'Início' }, { id: 'sobre', label: 'Sobre' }, { id: 'projetos', label: 'Projetos' }, { id: 'competencias', label: 'Competências' }, { id: 'contato', label: 'Contato' }]
 const filters = ['Todos', 'Automação', 'Integrações', 'Desenvolvimento'] as const
@@ -80,6 +81,7 @@ export default function App() {
       <motion.div {...entrance(.05)} className="hero-availability"><span className="status-dot" /> TECNOLOGIA COM PROPÓSITO <span className="availability-line" /></motion.div>
       <motion.p {...entrance(.12)} className="hero-position">{siteConfig.positioning}</motion.p>
       <motion.h1 {...entrance(.2)}>{headlineWords.slice(0, -2).join(' ')} <span>{headlineWords.slice(-2).join(' ')}<span className="title-dot">.</span></span></motion.h1>
+      <motion.p {...entrance(.24)} className="hero-description"><strong>{siteConfig.introduction}</strong></motion.p>
       <motion.p {...entrance(.28)} className="hero-description">{siteConfig.description}</motion.p>
       <motion.div {...entrance(.36)} className="hero-buttons"><a href="#projetos" className="button button-primary">Conheça meus projetos <ArrowUpRight size={18} /></a><a href="#contato" className="button button-quiet">Vamos conversar <ArrowRight size={17} /></a></motion.div>
       <motion.div {...entrance(.43)} className="hero-location"><MapPin size={14} /><span>{siteConfig.location}</span><i /><span>Conectando tecnologia e processos</span></motion.div>
@@ -94,6 +96,7 @@ export default function App() {
           <h2 className="section-title">Transformando processos em <span>soluções inteligentes.</span></h2>
           <p className="about-lead"><strong>Tecnologia não é apenas escrever código. É entender problemas, conectar sistemas e criar soluções que geram resultados.</strong></p>
           <div className="about-signature"><span className="signature-line" /><span className="mono">Pedro Paulo / Teresina, PI</span></div>
+          <PixelAvatar />
         </div>
         <div className="about-story">
           <p>Sou um profissional de tecnologia com atuação em desenvolvimento de sistemas, automação de processos e integração de plataformas. Meu trabalho combina conhecimento técnico, pensamento analítico e visão de negócio para transformar necessidades operacionais em soluções eficientes e escaláveis.</p>

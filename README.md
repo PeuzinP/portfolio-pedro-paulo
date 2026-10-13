@@ -63,6 +63,23 @@ tests/portfolio.spec.ts      Testes das jornadas principais
 
 Para gerar novamente a imagem de compartilhamento e as capturas de conferência, mantenha o servidor local na porta 5173 e execute `node scripts/preview-capture.mjs` (Google Chrome necessário).
 
+## Avatar Pixel Art
+
+O avatar permanece após a assinatura da coluna esquerda de Sobre mim. `src/components/PixelAvatar.tsx` organiza a composição, o parallax com springs do Motion e a observação de viewport/visibilidade da aba. `src/components/avatar/usePixelMaterialization.ts` reconstrói a imagem real em Canvas 2D, com fragmentos deslocados, pixels cianos e uma varredura. Após 2,2 segundos de tempo visível, a imagem original assume a renderização. A entrada ocorre apenas uma vez por montagem do componente; sair da viewport pausa o progresso.
+
+A respiração usa uma cópia da imagem com máscara restrita à região dos ombros/camiseta. O rosto mantém seus pixels originais, sem piscadas artificiais. A preferência de movimento reduzido é observada também durante a navegação: exibe a imagem completa e interrompe todos os efeitos. Touch recebe apenas animação ambiente. O Canvas reduz fragmentos/partículas em telas pequenas e dispositivos com poucos recursos; o DPR é limitado a 2 e o ambiente a 30 fps (24 em dispositivos limitados).
+
+Para ajustar:
+
+- **Velocidade de entrada:** `AVATAR_MOTION.duration` no hook (milissegundos; padrão `2200`).
+- **Interação:** `tilt` (graus, padrão `2.4`), `parallax` (pixels, padrão `3`) e `spring` (rigidez, amortecimento e massa) no mesmo objeto.
+- **Densidade/desempenho:** `tiles`, `particles`, `idleFps`, `lowPowerFps` e `maxDpr`. `tiles` indica o número de fragmentos por eixo.
+- **Dimensões:** regras `.pixel-avatar` em `src/components/pixel-avatar.css`, com `min()`/`clamp()` e limites fluidos de 380–460px no desktop, 300–380px no tablet e 260–320px no mobile, sempre limitados à coluna disponível.
+- **Ambiente:** variáveis CSS `--avatar-breath-duration`, `--avatar-ambient-duration` e `--avatar-accent`. As amplitudes da respiração ficam em `@keyframes avatar-breathe`.
+- **Imagem:** `public/pedro-pixel-avatar.png`. A máscara dos ombros foi ajustada a esse retrato; ao trocar a composição da imagem, revisar o início da máscara.
+
+Validação: `npm run test:e2e -- tests/avatar-motion.spec.ts`. Com Vite iniciado, `node scripts/check-avatar.mjs` gera capturas e relatório em `artifacts/avatar-motion/` nas larguras 320, 375, 430, 768, 1024, 1440 e 1920px. A URL padrão é `http://127.0.0.1:5173`; pode ser alterada pela variável `AVATAR_BASE_URL`. O projeto não possui tarefa de lint; `npm run build` inclui a checagem TypeScript.
+
 ## Logos das instituições
 
 Logos locais em `public/anhanguera.png` e `public/estacio.svg`, exibidas apenas para identificar as formações.

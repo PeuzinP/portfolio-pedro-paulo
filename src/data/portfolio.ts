@@ -2,9 +2,10 @@ export const siteConfig = {
   name: 'Pedro Paulo',
   location: 'Teresina – PI',
   positioning: 'Automação, Integrações e Desenvolvimento',
-  headline: 'Transformo processos manuais em soluções conectadas.',
+  headline: 'Olá, sou Pedro Paulo.',
+  introduction: 'Desenvolvo tecnologia para conectar sistemas, automatizar processos e simplificar operações.',
   description:
-    'Desenvolvo automações, integro sistemas e construo soluções web que organizam informações e tornam as operações mais eficientes. Minha atuação conecta tecnologia, processos e experiência do cliente.',
+    'Atuo com automação, integrações via APIs e desenvolvimento de soluções digitais. Tenho facilidade em identificar oportunidades de melhoria, estruturar projetos e criar ferramentas que resolvem problemas reais, unindo conhecimento técnico e visão de negócio.',
   contacts: {
     email: 'ppmendes1519@gmail.com',
     linkedin: 'https://www.linkedin.com/in/pedro-mendes-720830270/',
