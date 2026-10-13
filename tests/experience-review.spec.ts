@@ -26,14 +26,14 @@ async function openProject(page: Page) {
   return { card, dialog }
 }
 
-test('HR project distinguishes its scope and expected benefits from confirmed validation', async ({ page }) => {
+test('HR project shows its current application status and expected benefits', async ({ page }) => {
   const { card, dialog } = await openProject(page)
   await expect(card).toContainText('Automação de Processos · RH · Integrações')
-  await expect(card).toContainText('Em desenvolvimento e homologação')
-  await expect(dialog.getByText('Em desenvolvimento e homologação', { exact: true })).toBeVisible()
-  await expect(dialog.getByRole('heading', { name: 'Estágio e validação' })).toBeVisible()
-  await expect(dialog).toContainText('O ciclo completo não é apresentado como validado em produção.')
-  await expect(dialog).toContainText('As confirmações por etapa ainda não foram detalhadas neste portfólio.')
+  await expect(card).toContainText('Em aplicação')
+  await expect(dialog.getByText('Em aplicação', { exact: true })).toBeVisible()
+  await expect(dialog.getByRole('heading', { name: 'Estágio do projeto' })).toBeVisible()
+  await expect(dialog).toContainText('Solução em aplicação no acompanhamento das avaliações de experiência de 30 e 90 dias.')
+  await expect(dialog).not.toContainText('Em desenvolvimento e homologação')
   await expect(dialog.locator('.case-scope li')).toHaveCount(10)
   await expect(dialog.getByRole('heading', { name: 'Minha atuação' })).toBeVisible()
   await expect(dialog.locator('.case-contribution')).toContainText('Estruturei o fluxo do processo')

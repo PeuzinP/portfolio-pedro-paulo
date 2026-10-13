@@ -170,7 +170,7 @@ export default function ExperienceReviewDemo() {
       <div className={`hd-result ${complete ? 'hd-result--complete' : ''}`} role="status" aria-live="polite" aria-atomic="true">
         <span className="hd-result-dot" aria-hidden="true" /><p>{result}</p>
       </div>
-      <p className="hd-disclaimer">Simulação local: não envia e-mails, registra avaliações reais ou acessa dados corporativos. Os estados e o fluxo são ilustrativos; não representam um ciclo validado em produção.</p>
+      <p className="hd-disclaimer">Simulação local: não envia e-mails, registra avaliações reais ou acessa dados corporativos. Os estados e o fluxo são ilustrativos e não reproduzem dados ou operações reais do sistema em aplicação.</p>
     </section>
   )
 }

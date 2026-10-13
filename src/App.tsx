@@ -94,7 +94,7 @@ export default function App() {
           return <motion.article layout={!reduced} key={item.id} className={`project-card${item.featured ? ' project-card-featured' : ''}`} initial={{ opacity: 0, y: reduced ? 0 : 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: reduced ? 1 : .97 }} transition={{ duration: reduced ? 0 : .25 }}>
             <ProjectVisual kind={item.kind} />
             <div className="project-card-body">
-              <div className={`project-meta${item.categoryLabel ? ' project-meta-stacked' : ''}`}><span>{item.categoryLabel ?? item.category}</span>{item.featured ? <span className="featured-label"><i /> Maior projeto</span> : item.status !== 'Aplicação prática' ? <span className={`planning-label${item.status === 'Em desenvolvimento e homologação' ? ' development-label' : ''}`}><i /> {item.status}</span> : <span className="mono">/{item.number}</span>}</div>
+              <div className={`project-meta${item.categoryLabel ? ' project-meta-stacked' : ''}`}><span>{item.categoryLabel ?? item.category}</span>{item.featured ? <span className="featured-label"><i /> Maior projeto</span> : item.status !== 'Aplicação prática' ? <span className={`planning-label${item.status === 'Em desenvolvimento e homologação' ? ' development-label' : item.status === 'Em aplicação' ? ' applied-label' : ''}`}><i /> {item.status}</span> : <span className="mono">/{item.number}</span>}</div>
               <h3>{item.title}</h3>
               {item.featured && <span className="featured-subtitle">{item.shortTitle}</span>}
               <p>{item.description}</p>

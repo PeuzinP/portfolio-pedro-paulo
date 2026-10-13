@@ -25,7 +25,7 @@ export type Project = {
   category: ProjectCategory
   categories?: ProjectCategory[]
   categoryLabel?: string
-  status: 'Aplicação prática' | 'Em planejamento' | 'Em desenvolvimento e homologação'
+  status: 'Em aplicação' | 'Aplicação prática' | 'Em planejamento' | 'Em desenvolvimento e homologação'
   description: string
   technologies: string[]
   context: string
@@ -85,7 +85,7 @@ export const projects: Project[] = [
     category: 'Automação',
     categories: ['Automação', 'Integrações'],
     categoryLabel: 'Automação de Processos · RH · Integrações',
-    status: 'Em desenvolvimento e homologação',
+    status: 'Em aplicação',
     description:
       'Automação do acompanhamento de avaliações de colaboradores no período de experiência, com etapas de 30 e 90 dias, controle de prazos, formulários, notificações e encaminhamento para ciência e decisão da Diretoria.',
     technologies: ['JavaScript', 'Google Apps Script', 'Google Sheets', 'Google Forms', 'Gmail API', 'Google Drive', 'HTML', 'CSS'],
@@ -108,7 +108,7 @@ export const projects: Project[] = [
       'Separação entre ambientes de homologação e produção para apoiar os testes.',
     ],
     validation: {
-      note: 'As funcionalidades descrevem o escopo contemplado, em desenvolvimento e homologação. A implementação e a validação por etapa serão atualizadas conforme confirmadas. O ciclo completo não é apresentado como validado em produção.',
+      note: 'Solução em aplicação no acompanhamento das avaliações de experiência de 30 e 90 dias.',
       confirmedStages: [],
     },
     contribution:

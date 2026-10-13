@@ -23,7 +23,7 @@ npm run test:e2e # testes no Google Chrome instalado
 ## Personalizar
 
 - **Conteúdo, projetos e competências:** `src/data/portfolio.ts`.
-- **Avaliações de Experiência:** o registro `avaliacoes-experiencia` contém o status configurável, o escopo, a atuação e os benefícios esperados. Use `categories` para definir os filtros, `categoryLabel` para o texto do card e `validation.confirmedStages` somente para etapas cuja implementação e validação tenham sido confirmadas. A lista começa vazia; o ciclo completo não é apresentado como validado em produção.
+- **Avaliações de Experiência:** o registro `avaliacoes-experiencia` contém o status configurável, o escopo, a atuação e os benefícios esperados. Use `categories` para definir os filtros, `categoryLabel` para o texto do card e `validation.confirmedStages` somente para etapas cuja implementação e validação tenham sido confirmadas. O status atual é **Em aplicação**, para os ciclos de 30 e 90 dias. A demonstração utiliza exclusivamente dados fictícios.
 - **Contatos:** preencha `siteConfig.contacts` no mesmo arquivo. Campos vazios não geram botões.
   - `email`: seu endereço de e-mail.
   - `linkedin` e `github`: URLs completas com `https://`.
