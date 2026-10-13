@@ -12,7 +12,7 @@ export const siteConfig = {
     whatsapp: '+55 (86) 98141-9738',
     resume: '',
   },
-  siteUrl: 'https://pedro-paulo-conecta.brainychair64.chatgpt.site',
+  siteUrl: 'https://portfolio-pedro-paulo-coral.vercel.app',
 }
 
 export type ProjectCategory = 'Automação' | 'Integrações' | 'Desenvolvimento'
