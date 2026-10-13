@@ -12,7 +12,7 @@ export const siteConfig = {
     whatsapp: '+55 (86) 98141-9738',
     resume: '',
   },
-  siteUrl: 'https://portfolio-pedro-paulo-coral.vercel.app',
+  siteUrl: 'https://pedropaulo-dev.vercel.app',
 }
 
 export type ProjectCategory = 'Automação' | 'Integrações' | 'Desenvolvimento'
