@@ -1,9 +1,15 @@
-import { ArrowDown, ArrowRight, Check, FileText, GitBranch, GraduationCap, Mail, MessageCircle, ShieldCheck, Table2, Webhook } from 'lucide-react'
+import { ArrowDown, ArrowRight, Check, Code2, Database, FileText, GitBranch, GraduationCap, Mail, MessageCircle, ScanLine, ShieldCheck, Table2, Webhook } from 'lucide-react'
 import type { Project } from '../data/portfolio'
 
 export default function ProjectVisual({ kind }: { kind: Project['kind'] }) {
   return <div className={`project-visual visual-${kind}`} aria-hidden="true">
     <span className="visual-caption mono">{kind === 'orchestrator' ? 'ARQUITETURA CONCEITUAL' : 'FLUXO ILUSTRATIVO'}</span>
+    {kind === 'reading' && <div className="reading-visual">
+      <div className="reading-architecture mono"><span><Code2 size={13} /> React</span><i /><span><Webhook size={13} /> FastAPI</span><i /><span><Database size={13} /> MySQL</span></div>
+      <div className="reading-pipeline"><div className="reading-sheet"><span className="sheet-heading"><FileText size={14} /> FOLHA-RESPOSTA</span><span className="sheet-subtitle">Modelo ilustrativo</span><div className="omr-rows">{[2, 0, 3, 1, 2].map((answer, row) => <div key={row}><small>0{row + 1}</small>{[0, 1, 2, 3].map(col => <i key={col} className={col === answer ? 'marked' : ''} />)}</div>)}</div><div className="sheet-barcode" /></div>
+        <span className="reading-connector"><ArrowRight size={18} /></span><div className="reading-stages"><div><ScanLine size={19} /><span><strong>Leitura OMR</strong><small>Marcações + código de barras</small></span></div><ArrowDown size={15} /><div><ShieldCheck size={19} /><span><strong>Correção e validação</strong><small>Revisão por lote</small></span></div><ArrowDown size={15} /><div><Webhook size={19} /><span><strong>Integração KeepEdu</strong><small>Avaliações + frequência</small></span></div></div>
+      </div><div className="reading-footer mono"><span>Painel</span><span>Kanban</span><span>Histórico</span></div>
+    </div>}
     {kind === 'leads' && <div className="mini-leads"><div className="mini-node"><MessageCircle size={20} /><span>Novo contato</span></div><span className="mini-line" /><div className="mini-node central-node"><GitBranch size={20} /><span>Identificar intenção</span></div><div className="branch-lines" /><div className="mini-stack"><span><i /> Comercial</span><span><i /> Financeiro</span><span><i /> Suporte</span></div></div>}
     {kind === 'requests' && <div className="mini-requests"><div className="mini-form"><span><FileText size={15} /> Nova solicitação</span><i /><i /><div><Check size={11} /> Dados validados</div></div><div className="visual-link"><ArrowRight size={17} /><small>Apps Script</small></div><div className="mini-stack"><span><Table2 size={15} /> Registro</span><span><Mail size={15} /> Notificação</span></div></div>}
     {kind === 'access' && <div className="mini-access"><div className="mini-node"><Table2 size={21} /><span>Consultar RA</span></div><span className="mini-line" /><div className="mini-node central-node"><ShieldCheck size={23} /><span>Validar acesso</span></div><span className="mini-line" /><div className="mini-node"><GraduationCap size={23} /><span>Bernoulli</span></div><span className="mini-result"><Check size={12} /> Resultado registrado</span></div>}

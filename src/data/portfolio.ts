@@ -29,13 +29,49 @@ export type Project = {
   solution: string
   flow: string[]
   benefit: string
-  kind: 'leads' | 'requests' | 'access' | 'orchestrator'
+  kind: 'reading' | 'leads' | 'requests' | 'access' | 'orchestrator'
+  featured?: boolean
+  highlights?: { title: string; description: string }[]
 }
 
 export const projects: Project[] = [
   {
-    id: 'atendimento-leads',
+    id: 'reading-keepedu',
     number: '01',
+    title: 'Reading KeepEdu — processamento e gestão de avaliações',
+    shortTitle: 'Da folha-resposta ao acompanhamento da avaliação.',
+    category: 'Desenvolvimento',
+    status: 'Aplicação prática',
+    featured: true,
+    description:
+      'Aplicação web com frontend React e backend Python/FastAPI para processar cartões OMR, revisar lotes e conectar avaliações, alunos, folhas-resposta e frequência à KeepEdu.',
+    technologies: ['React', 'Python', 'FastAPI', 'MySQL', 'Vite', 'APIs REST', 'zxing-cpp'],
+    context:
+      'O Reading KeepEdu reúne as etapas de processamento e acompanhamento de avaliações em uma aplicação com frontend e backend separados. É o maior projeto do meu portfólio, conectando desenvolvimento de interface, regras de negócio, leitura de cartões e integração com uma plataforma educacional.',
+    problem:
+      'Organizar o percurso entre o recebimento das folhas-resposta, a leitura das marcações, a correção e validação por lote e o envio das informações à KeepEdu, mantendo visibilidade sobre o processamento e seu histórico.',
+    solution:
+      'Frontend em React/Vite com painel, Kanban, histórico e telas de processamento, correção e validação por lote. O backend em Python/FastAPI processa cartões OMR (leitura óptica de marcações), utiliza zxing-cpp para ler códigos de barras e integra avaliações, alunos, folhas-resposta e frequência com a API KeepEdu. A arquitetura contempla autenticação por login KeepEdu ou SSO, sessões e persistência em MySQL quando habilitada, além de armazenamento em arquivos para desenvolvimento local.',
+    flow: [
+      'Recebimento das folhas-resposta e organização do lote',
+      'Leitura OMR e identificação por código de barras',
+      'Correção e validação do lote na interface',
+      'Envio das informações pela integração KeepEdu',
+      'Acompanhamento no painel, Kanban e histórico',
+    ],
+    benefit:
+      'Reúne processamento, revisão e acompanhamento em um mesmo fluxo, com organização por lotes e integração das informações à KeepEdu. O painel, o Kanban e o histórico dão visibilidade à operação e às etapas que precisam de atenção.',
+    highlights: [
+      { title: 'Interface e operação', description: 'React/Vite com painel, Kanban, histórico e telas dedicadas ao processamento, à correção e à validação por lote.' },
+      { title: 'Processamento e integração', description: 'API em Python/FastAPI, leitura OMR, identificação por código de barras e comunicação com a KeepEdu.' },
+      { title: 'Dados e autenticação', description: 'MySQL para lotes, Kanban, histórico e sessões quando habilitado; acesso por login KeepEdu ou SSO.' },
+      { title: 'Ciclo de vida dos arquivos', description: 'Uploads temporários e remoção de imagens originais e PDFs de frequência após a confirmação do envio à KeepEdu.' },
+    ],
+    kind: 'reading',
+  },
+  {
+    id: 'atendimento-leads',
+    number: '02',
     title: 'Automação de atendimento e qualificação de leads',
     shortTitle: 'Do primeiro contato à equipe certa.',
     category: 'Automação',
@@ -62,7 +98,7 @@ export const projects: Project[] = [
   },
   {
     id: 'solicitacoes-cancelamento',
-    number: '02',
+    number: '03',
     title: 'Gestão de solicitações de cancelamento',
     shortTitle: 'Solicitações organizadas, do início ao fim.',
     category: 'Desenvolvimento',
@@ -89,7 +125,7 @@ export const projects: Project[] = [
   },
   {
     id: 'acessos-educacionais',
-    number: '03',
+    number: '04',
     title: 'Automação de acessos em plataforma educacional',
     shortTitle: 'Acessos tratados com validação e rastreabilidade.',
     category: 'Automação',
@@ -116,7 +152,7 @@ export const projects: Project[] = [
   },
   {
     id: 'orquestrador-educacional',
-    number: '04',
+    number: '05',
     title: 'Orquestrador de integrações educacionais',
     shortTitle: 'Uma arquitetura para conectar o ecossistema.',
     category: 'Integrações',
