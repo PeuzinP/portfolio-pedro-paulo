@@ -317,3 +317,9 @@ svg { flex-shrink:0; }
 .project-meta .applied-label { color:#82ded1; border-color:#315b59; background:#172e30; }
 .project-meta .applied-label i { background:#82ded1; }
 .case-validation-applied { border-color:#315b59; background:#172e30; }
+
+.technical-education { display:flex; align-items:flex-start; gap:12px; margin-bottom:20px; }
+.technical-education img { flex-shrink:0; object-fit:contain; }
+.education .technical-education strong { line-height:1.6; margin:0; }
+.education .technical-education span { line-height:1.6; }
+.education .education-completed { color:#82ded1; }

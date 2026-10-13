@@ -261,3 +261,10 @@ export const skills: { title: string; description: string; items: string[] }[] =
     items: ['Git', 'GitHub', 'Microsoft 365'],
   },
 ]
+
+export const technicalEducation = {
+  title: 'Técnico em Desenvolvimento de Sistemas',
+  institution: 'IFPI — Instituto Federal do Piauí',
+  status: 'Concluído',
+  symbol: '/if-symbol.svg',
+}
