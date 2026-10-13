@@ -73,8 +73,8 @@ test('changing the scenario clears the previous result and allows another simula
 test('project filters show the correct projects and selected state', async ({ page }) => {
   const projects = page.locator('#projetos')
   const filters = projects.getByRole('group', { name: 'Filtrar projetos por categoria' })
-  await expect(projects.getByRole('article')).toHaveCount(5)
-  for (const [name, count] of [['Automação', 2], ['Integrações', 1], ['Desenvolvimento', 2], ['Todos', 5]] as const) {
+  await expect(projects.getByRole('article')).toHaveCount(6)
+  for (const [name, count] of [['Automação', 3], ['Integrações', 2], ['Desenvolvimento', 2], ['Todos', 6]] as const) {
     const button = filters.getByRole('button', { name: new RegExp(`^${name}`) })
     await button.click()
     await expect(button).toHaveAttribute('aria-pressed', 'true')
@@ -82,7 +82,7 @@ test('project filters show the correct projects and selected state', async ({ pa
     await expect(projects.getByRole('article')).toHaveCount(count)
     await expect(projects.locator('.project-count')).toHaveText(`${count} ${count === 1 ? 'projeto' : 'projetos'}`)
     if (name === 'Integrações') {
-      await expect(projects.getByRole('heading', { level: 3 })).toHaveText('Orquestrador de integrações educacionais')
+      await expect(projects.getByRole('heading', { level: 3 })).toHaveText(['Automação de Avaliações de Experiência', 'Orquestrador de integrações educacionais'])
     }
     if (name === 'Desenvolvimento') {
       await expect(projects.getByRole('heading', { level: 3 })).toHaveText(['Reading KeepEdu — processamento e gestão de avaliações', 'Gestão de solicitações de cancelamento'])

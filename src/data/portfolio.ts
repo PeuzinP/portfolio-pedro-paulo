@@ -15,13 +15,17 @@ export const siteConfig = {
   siteUrl: 'https://pedro-paulo-conecta.brainychair64.chatgpt.site',
 }
 
+export type ProjectCategory = 'Automação' | 'Integrações' | 'Desenvolvimento'
+
 export type Project = {
   id: string
   number: string
   title: string
   shortTitle: string
-  category: 'Automação' | 'Integrações' | 'Desenvolvimento'
-  status: 'Aplicação prática' | 'Em planejamento'
+  category: ProjectCategory
+  categories?: ProjectCategory[]
+  categoryLabel?: string
+  status: 'Aplicação prática' | 'Em planejamento' | 'Em desenvolvimento e homologação'
   description: string
   technologies: string[]
   context: string
@@ -29,9 +33,13 @@ export type Project = {
   solution: string
   flow: string[]
   benefit: string
-  kind: 'reading' | 'leads' | 'requests' | 'access' | 'orchestrator'
+  kind: 'reading' | 'experience' | 'leads' | 'requests' | 'access' | 'orchestrator'
   featured?: boolean
   highlights?: { title: string; description: string }[]
+  scope?: string[]
+  validation?: { note: string; confirmedStages: string[] }
+  contribution?: string
+  expectedBenefits?: string[]
 }
 
 export const projects: Project[] = [
@@ -70,8 +78,55 @@ export const projects: Project[] = [
     kind: 'reading',
   },
   {
-    id: 'atendimento-leads',
+    id: 'avaliacoes-experiencia',
     number: '02',
+    title: 'Automação de Avaliações de Experiência',
+    shortTitle: 'Prazos, responsáveis e decisões conectados em um só fluxo.',
+    category: 'Automação',
+    categories: ['Automação', 'Integrações'],
+    categoryLabel: 'Automação de Processos · RH · Integrações',
+    status: 'Em desenvolvimento e homologação',
+    description:
+      'Automação do acompanhamento de avaliações de colaboradores no período de experiência, com etapas de 30 e 90 dias, controle de prazos, formulários, notificações e encaminhamento para ciência e decisão da Diretoria.',
+    technologies: ['JavaScript', 'Google Apps Script', 'Google Sheets', 'Google Forms', 'Gmail API', 'Google Drive', 'HTML', 'CSS'],
+    context:
+      'O processo de avaliação de experiência envolve dados dos colaboradores, datas, responsáveis e participação de diferentes áreas. O ciclo contempla avaliações de 30 e 90 dias, com a participação de avaliadores, Diretoria, Departamento Pessoal e Gente & Gestão.',
+    problem:
+      'O acompanhamento manual exige conferências frequentes e pode gerar atrasos, informações dispersas e dificuldade para identificar pendências.',
+    solution:
+      'Desenvolvimento de uma solução integrada ao ecossistema Google para organizar o ciclo das avaliações, conectando base de colaboradores, planilha de controle, formulários, notificações por e-mail e uma interface web para consulta e registro de ciência.',
+    scope: [
+      'Sincronização de informações da base de colaboradores com o controle das avaliações.',
+      'Organização de colaborador, unidade, cargo, setor, avaliador e datas.',
+      'Acompanhamento dos prazos de avaliação.',
+      'Encaminhamento de formulários aos responsáveis.',
+      'Coleta de respostas e identificação do respondente por e-mail verificado.',
+      'Notificações por e-mail nas etapas do processo.',
+      'Links individuais para visualizar a avaliação e registrar ciência.',
+      'Registro de status e acompanhamento de pendências.',
+      'Encaminhamento das informações para ciência e decisão da Diretoria.',
+      'Separação entre ambientes de homologação e produção para apoiar os testes.',
+    ],
+    validation: {
+      note: 'As funcionalidades descrevem o escopo contemplado, em desenvolvimento e homologação. A implementação e a validação por etapa serão atualizadas conforme confirmadas. O ciclo completo não é apresentado como validado em produção.',
+      confirmedStages: [],
+    },
+    contribution:
+      'Estruturei o fluxo do processo e desenvolvi automações em JavaScript e Google Apps Script, integrando planilhas, formulários, e-mails e uma interface web. Trabalhei nas regras de negócio, no controle de responsáveis e prazos e na organização das informações necessárias para acompanhar cada avaliação.',
+    flow: ['Base de colaboradores', 'Controle de prazos', 'Avaliador', 'Resposta', 'Diretoria', 'DP / Gente & Gestão'],
+    benefit: 'Objetivos da solução, apresentados como benefícios esperados:',
+    expectedBenefits: [
+      'Reduzir controles manuais e cobranças repetitivas.',
+      'Centralizar informações e facilitar a consulta.',
+      'Dar visibilidade aos responsáveis e às pendências.',
+      'Padronizar o encaminhamento das avaliações.',
+      'Melhorar a rastreabilidade das etapas.',
+    ],
+    kind: 'experience',
+  },
+  {
+    id: 'atendimento-leads',
+    number: '03',
     title: 'Automação de atendimento e qualificação de leads',
     shortTitle: 'Do primeiro contato à equipe certa.',
     category: 'Automação',
@@ -98,7 +153,7 @@ export const projects: Project[] = [
   },
   {
     id: 'solicitacoes-cancelamento',
-    number: '03',
+    number: '04',
     title: 'Gestão de solicitações de cancelamento',
     shortTitle: 'Solicitações organizadas, do início ao fim.',
     category: 'Desenvolvimento',
@@ -125,7 +180,7 @@ export const projects: Project[] = [
   },
   {
     id: 'acessos-educacionais',
-    number: '04',
+    number: '05',
     title: 'Automação de acessos em plataforma educacional',
     shortTitle: 'Acessos tratados com validação e rastreabilidade.',
     category: 'Automação',
@@ -152,7 +207,7 @@ export const projects: Project[] = [
   },
   {
     id: 'orquestrador-educacional',
-    number: '05',
+    number: '06',
     title: 'Orquestrador de integrações educacionais',
     shortTitle: 'Uma arquitetura para conectar o ecossistema.',
     category: 'Integrações',
@@ -197,8 +252,8 @@ export const skills: { title: string; description: string; items: string[] }[] =
   },
   {
     title: 'Processos e relacionamento',
-    description: 'Entender a jornada e traduzir necessidades em melhorias.',
-    items: ['CRM', 'Jornada do cliente', 'Qualificação de leads', 'Melhoria de processos'],
+    description: 'Entender jornadas e automatizar processos internos de RH, com gestão de prazos, aprovações, notificações e integração entre áreas.',
+    items: ['CRM', 'Jornada do cliente', 'Qualificação de leads', 'Melhoria de processos', 'Processos de RH'],
   },
   {
     title: 'Ferramentas',

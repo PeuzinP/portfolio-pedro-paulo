@@ -1,9 +1,17 @@
-import { ArrowDown, ArrowRight, Check, Code2, Database, FileText, GitBranch, GraduationCap, Mail, MessageCircle, ScanLine, ShieldCheck, Table2, Webhook } from 'lucide-react'
+import { ArrowDown, ArrowRight, CalendarClock, Check, ClipboardCheck, Code2, Database, FileText, GitBranch, GraduationCap, Mail, MessageCircle, ScanLine, ShieldCheck, Table2, Users, Webhook } from 'lucide-react'
 import type { Project } from '../data/portfolio'
 
 export default function ProjectVisual({ kind }: { kind: Project['kind'] }) {
   return <div className={`project-visual visual-${kind}`} aria-hidden="true">
     <span className="visual-caption mono">{kind === 'orchestrator' ? 'ARQUITETURA CONCEITUAL' : 'FLUXO ILUSTRATIVO'}</span>
+    {kind === 'experience' && <div className="experience-visual"><span className="experience-periods mono">30 DIAS <i /> 90 DIAS</span><div className="experience-mini-flow">{[
+      { label: 'Base de colaboradores', icon: Users },
+      { label: 'Controle de prazos', icon: CalendarClock },
+      { label: 'Avaliador', icon: ClipboardCheck },
+      { label: 'Resposta', icon: FileText },
+      { label: 'Diretoria', icon: ShieldCheck },
+      { label: 'DP / Gente & Gestão', icon: Users },
+    ].map((step, i) => <div key={step.label}><span className="experience-mini-index mono">0{i + 1}</span><step.icon size={17} /><strong>{step.label}</strong>{i < 5 && <ArrowRight className="experience-mini-arrow" size={12} />}</div>)}</div></div>}
     {kind === 'reading' && <div className="reading-visual">
       <div className="reading-architecture mono"><span><Code2 size={13} /> React</span><i /><span><Webhook size={13} /> FastAPI</span><i /><span><Database size={13} /> MySQL</span></div>
       <div className="reading-pipeline"><div className="reading-sheet"><span className="sheet-heading"><FileText size={14} /> FOLHA-RESPOSTA</span><span className="sheet-subtitle">Modelo ilustrativo</span><div className="omr-rows">{[2, 0, 3, 1, 2].map((answer, row) => <div key={row}><small>0{row + 1}</small>{[0, 1, 2, 3].map(col => <i key={col} className={col === answer ? 'marked' : ''} />)}</div>)}</div><div className="sheet-barcode" /></div>

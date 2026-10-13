@@ -23,6 +23,7 @@ npm run test:e2e # testes no Google Chrome instalado
 ## Personalizar
 
 - **Conteúdo, projetos e competências:** `src/data/portfolio.ts`.
+- **Avaliações de Experiência:** o registro `avaliacoes-experiencia` contém o status configurável, o escopo, a atuação e os benefícios esperados. Use `categories` para definir os filtros, `categoryLabel` para o texto do card e `validation.confirmedStages` somente para etapas cuja implementação e validação tenham sido confirmadas. A lista começa vazia; o ciclo completo não é apresentado como validado em produção.
 - **Contatos:** preencha `siteConfig.contacts` no mesmo arquivo. Campos vazios não geram botões.
   - `email`: seu endereço de e-mail.
   - `linkedin` e `github`: URLs completas com `https://`.
@@ -39,6 +40,8 @@ Depois de editar, execute `npm run build` novamente. Para outro provedor de hosp
 O fluxo inicial apresenta cinco etapas, destaca conexões e permite pausar ou selecionar nós pelo teclado. Projetos podem ser filtrados e abertos em um diálogo nativo com foco contido, fechamento por Escape e retorno do foco ao botão de origem. O menu móvel fecha por Escape ou seleção de uma seção.
 
 A demonstração possui seis cenários: três intenções combinadas com atendimento dentro ou fora do horário comercial. Todos os dados são fictícios, processados apenas em memória, sem requisições, armazenamento, disparos ou integração com plataformas externas. O projeto de orquestração educacional está identificado como **em planejamento**.
+
+O projeto **Automação de Avaliações de Experiência** inclui uma segunda demonstração nos detalhes: escolha 30 ou 90 dias, simule a passagem pelas etapas e selecione os participantes para conhecer seus papéis. O painel usa um colaborador fictício e prazos relativos; os estados são ilustrativos. Essa simulação não registra avaliações, não envia e-mails e não acessa dados corporativos. Seu código fica em `src/components/ExperienceReviewDemo.tsx`.
 
 As animações respeitam `prefers-reduced-motion`. Há foco visível, atalho para o conteúdo, navegação sem depender de hover, HTML semântico e resultado textual da simulação anunciado de forma acessível.
 

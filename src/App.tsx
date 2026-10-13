@@ -64,7 +64,7 @@ export default function App() {
   const [project, setProject] = useState<Project | null>(null)
   const reduced = useReducedMotion()
   const hero = useRef<HTMLElement>(null)
-  const shownProjects = projects.filter(item => filter === 'Todos' || item.category === filter)
+  const shownProjects = projects.filter(item => filter === 'Todos' || (item.categories ?? [item.category]).includes(filter))
   const headlineWords = siteConfig.headline.replace(/\.$/, '').split(' ')
   useEffect(() => {
     if (reduced || !window.matchMedia('(min-width: 900px)').matches) return
@@ -90,11 +90,11 @@ export default function App() {
     <section id="projetos" className="section projects-section"><div className="container"><Reveal><div className="section-heading"><div><p className="eyebrow"><span>02</span> PROJETOS EM DESTAQUE</p><h2 className="section-title">Conexões que viram <span>soluções.</span></h2></div><p className="section-description">Do atendimento à operação.<br />Explore o problema, a lógica e a solução.</p></div><div className="project-filters" role="group" aria-label="Filtrar projetos por categoria">{filters.map(item => <button type="button" key={item} className={filter === item ? 'selected' : ''} aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}{item === 'Todos' && <span>{String(projects.length).padStart(2, '0')}</span>}</button>)}<span className="project-count mono" aria-live="polite">{shownProjects.length} {shownProjects.length === 1 ? 'projeto' : 'projetos'}</span></div></Reveal>
       <motion.div layout={!reduced} className="projects-grid">
         <AnimatePresence mode="popLayout">{shownProjects.map(item => {
-          const visibleTechnologies = item.featured ? item.technologies : item.technologies.slice(0, 4)
+          const visibleTechnologies = item.featured || item.kind === 'experience' ? item.technologies : item.technologies.slice(0, 4)
           return <motion.article layout={!reduced} key={item.id} className={`project-card${item.featured ? ' project-card-featured' : ''}`} initial={{ opacity: 0, y: reduced ? 0 : 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: reduced ? 1 : .97 }} transition={{ duration: reduced ? 0 : .25 }}>
             <ProjectVisual kind={item.kind} />
             <div className="project-card-body">
-              <div className="project-meta"><span>{item.category}</span>{item.featured ? <span className="featured-label"><i /> Maior projeto</span> : item.kind === 'orchestrator' ? <span className="planning-label"><i /> Em planejamento</span> : <span className="mono">/{item.number}</span>}</div>
+              <div className={`project-meta${item.categoryLabel ? ' project-meta-stacked' : ''}`}><span>{item.categoryLabel ?? item.category}</span>{item.featured ? <span className="featured-label"><i /> Maior projeto</span> : item.status !== 'Aplicação prática' ? <span className={`planning-label${item.status === 'Em desenvolvimento e homologação' ? ' development-label' : ''}`}><i /> {item.status}</span> : <span className="mono">/{item.number}</span>}</div>
               <h3>{item.title}</h3>
               {item.featured && <span className="featured-subtitle">{item.shortTitle}</span>}
               <p>{item.description}</p>
