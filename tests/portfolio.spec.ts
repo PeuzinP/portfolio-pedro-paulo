@@ -187,11 +187,20 @@ for (const width of [360, 390, 768, 1440]) {
   })
 }
 
-test('unconfigured contact channels stay hidden without placeholder links', async ({ page }) => {
+test('configured contact channels use the supplied details and empty channels stay hidden', async ({ page }) => {
   const contact = page.locator('#contato')
   await contact.scrollIntoViewIfNeeded()
-  await expect(contact.getByText('Canais de contato disponíveis em breve.')).toBeVisible()
-  for (const name of ['E-mail', 'LinkedIn', 'GitHub', 'WhatsApp', 'Currículo']) {
+  await expect(contact.getByText('Canais de contato disponíveis em breve.')).toHaveCount(0)
+  for (const [name, href] of [
+    ['E-mail', 'mailto:ppmendes1519@gmail.com'],
+    ['LinkedIn', 'https://www.linkedin.com/in/pedro-mendes-720830270/'],
+    ['WhatsApp', 'https://wa.me/5586981419738'],
+  ]) {
+    const link = contact.getByRole('link', { name, exact: true })
+    await expect(link).toBeVisible()
+    await expect(link).toHaveAttribute('href', href)
+  }
+  for (const name of ['GitHub', 'Currículo']) {
     await expect(contact.getByRole('link', { name })).toHaveCount(0)
   }
   await expect(page.locator('a[href=""], a[href="#"], a[href^="javascript:"]')).toHaveCount(0)

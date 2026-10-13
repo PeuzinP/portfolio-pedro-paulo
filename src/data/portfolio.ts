@@ -6,10 +6,10 @@ export const siteConfig = {
   description:
     'Desenvolvo automações, integro sistemas e construo soluções web que organizam informações e tornam as operações mais eficientes. Minha atuação conecta tecnologia, processos e experiência do cliente.',
   contacts: {
-    email: '',
-    linkedin: '',
+    email: 'ppmendes1519@gmail.com',
+    linkedin: 'https://www.linkedin.com/in/pedro-mendes-720830270/',
     github: '',
-    whatsapp: '',
+    whatsapp: '+55 (86) 98141-9738',
     resume: '',
   },
   siteUrl: 'https://pedro-paulo-conecta.brainychair64.chatgpt.site',
