@@ -1,10 +1,11 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { siteConfig } from './src/data/portfolio'
+import { visitsDevPlugin } from './scripts/visits-dev-plugin'
 
-export default defineConfig({
-  plugins: [react(), tailwindcss(), {
+export default defineConfig(({ mode }) => ({
+  plugins: [react(), tailwindcss(), visitsDevPlugin({ ...process.env, ...loadEnv(mode, process.cwd(), '') }), {
     name: 'portfolio-metadata',
     transformIndexHtml() {
       if (!siteConfig.siteUrl) return []
@@ -21,4 +22,4 @@ export default defineConfig({
       ]
     },
   }],
-})
+}))

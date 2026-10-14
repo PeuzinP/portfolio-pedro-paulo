@@ -63,6 +63,10 @@ tests/portfolio.spec.ts      Testes das jornadas principais
 
 Para gerar novamente a imagem de compartilhamento e as capturas de conferência, mantenha o servidor local na porta 5173 e execute `node scripts/preview-capture.mjs` (Google Chrome necessário).
 
+## Visitas e boas-vindas
+
+O rodapé consulta métricas persistentes em Upstash Redis por uma função Vercel. O reconhecimento e o registro de visitas são opcionais, com consentimento e revogação. O toast funciona mesmo sem API. Configure `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` e `ANALYTICS_SECRET` no servidor; sem banco, a interface mostra indisponibilidade, sem números fictícios. Veja o [guia completo de configuração, privacidade e testes](docs/visits.md). As funcionalidades são independentes do avatar.
+
 ## Avatar Pixel Art
 
 O avatar permanece após a assinatura da coluna esquerda de Sobre mim. `src/components/PixelAvatar.tsx` organiza a composição, o parallax com springs do Motion e a observação de viewport/visibilidade da aba. `src/components/avatar/usePixelMaterialization.ts` reconstrói a imagem real em Canvas 2D, com fragmentos deslocados, pixels cianos e uma varredura. Após 2,2 segundos de tempo visível, a imagem original assume a renderização. A entrada ocorre apenas uma vez por montagem do componente; sair da viewport pausa o progresso.
