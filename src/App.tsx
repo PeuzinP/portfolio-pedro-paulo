@@ -3,10 +3,10 @@ import type { ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ArrowDown, ArrowRight, ArrowUpRight, Braces, BriefcaseBusiness, Check, ChevronUp, Code2, Database, FileDown, Github, GraduationCap, Instagram, Linkedin, Mail, MapPin, Menu, MessageCircle, Network, Terminal, Workflow, X } from 'lucide-react'
 import { projects, siteConfig, skills, technicalEducation } from './data/portfolio'
-import type { Project } from './data/portfolio'
+import { caseStudyHref } from './data/caseStudies'
 import FlowDiagram from './components/FlowDiagram'
 import ProjectVisual from './components/ProjectVisual'
-import ProjectDialog from './components/ProjectDialog'
+import CaseStudyPage from './components/CaseStudyPage'
 import AutomationDemo from './components/AutomationDemo'
 import PixelAvatar from './components/PixelAvatar'
 import PortfolioStats from './components/PortfolioStats'
@@ -25,6 +25,7 @@ function Reveal({ children, className = '' }: { children: ReactNode; className?:
 function Header() {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState('inicio')
+  const isCaseStudy = window.location.pathname.startsWith('/projetos/')
   const toggle = useRef<HTMLButtonElement>(null)
   const header = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -44,9 +45,9 @@ function Header() {
     document.addEventListener('pointerdown', outside)
     return () => { document.removeEventListener('keydown', dismiss); document.removeEventListener('pointerdown', outside) }
   }, [open])
-  return <header className="site-header" ref={header}><div className="container header-inner"><a className="brand" href="#inicio" aria-label="Pedro Paulo, início" onClick={() => setOpen(false)}><span className="brand-symbol">p<span>p</span><i /></span><span>Pedro Paulo<span className="brand-dot">.</span></span></a>
+  return <header className="site-header" ref={header}><div className="container header-inner"><a className="brand" href={isCaseStudy ? '/#inicio' : '#inicio'} aria-label="Pedro Paulo, início" onClick={() => setOpen(false)}><span className="brand-symbol">p<span>p</span><i /></span><span>Pedro Paulo<span className="brand-dot">.</span></span></a>
     <button className="mobile-toggle icon-button" ref={toggle} aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="main-navigation" onClick={() => setOpen(!open)}>{open ? <X size={23} /> : <Menu size={23} />}</button>
-    <nav id="main-navigation" className={open ? 'nav-open' : ''} aria-label="Navegação principal">{navigation.map(item => <a key={item.id} href={`#${item.id}`} className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'location' : undefined} onClick={() => setOpen(false)}>{item.label}{item.id === 'contato' && <ArrowUpRight size={14} />}</a>)}</nav>
+    <nav id="main-navigation" className={open ? 'nav-open' : ''} aria-label="Navegação principal">{navigation.map(item => <a key={item.id} href={`${isCaseStudy ? '/' : ''}#${item.id}`} className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'location' : undefined} onClick={() => setOpen(false)}>{item.label}{item.id === 'contato' && <ArrowUpRight size={14} />}</a>)}</nav>
   </div></header>
 }
 
@@ -66,7 +67,6 @@ function ContactLinks() {
 
 export default function App() {
   const [filter, setFilter] = useState<(typeof filters)[number]>('Todos')
-  const [project, setProject] = useState<Project | null>(null)
   const reduced = useReducedMotion()
   const hero = useRef<HTMLElement>(null)
   const shownProjects = projects.filter(item => filter === 'Todos' || (item.categories ?? [item.category]).includes(filter))
@@ -79,6 +79,8 @@ export default function App() {
     return () => { window.removeEventListener('scroll', update); cancelAnimationFrame(raf) }
   }, [reduced])
   const entrance = (delay: number) => ({ initial: { opacity: 0, y: reduced ? 0 : 18 }, animate: { opacity: 1, y: 0 }, transition: { duration: reduced ? 0 : .65, delay: reduced ? 0 : delay } })
+  const caseStudyId = window.location.pathname.match(/^\/projetos\/([^/]+)\/?$/)?.[1]
+  if (caseStudyId) return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><CaseStudyPage projectId={caseStudyId} /><footer className="site-footer"><div className="container"><a className="footer-name" href="/#inicio">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p></div></footer></>
   return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><main id="conteudo">
     <section id="inicio" className="hero" ref={hero}><div className="hero-decoration" aria-hidden="true" /><div className="container hero-grid"><div className="hero-copy">
       <motion.div {...entrance(.05)} className="hero-availability"><span className="status-dot" /> TECNOLOGIA COM PROPÓSITO <span className="availability-line" /></motion.div>
@@ -123,7 +125,7 @@ export default function App() {
               {item.featured && <span className="featured-subtitle">{item.shortTitle}</span>}
               <p>{item.description}</p>
               <div className="tag-list">{visibleTechnologies.map(tech => <span key={tech}>{tech}</span>)}{item.technologies.length > visibleTechnologies.length && <span aria-label={`${item.technologies.length - visibleTechnologies.length} outras tecnologias nos detalhes`}>+{item.technologies.length - visibleTechnologies.length}</span>}</div>
-              <button type="button" className="explore-project" onClick={() => setProject(item)}>Explorar projeto <span><ArrowUpRight size={20} /></span></button>
+              <a className="explore-project" href={caseStudyHref(item.id)}>Ver estudo de caso <span><ArrowUpRight size={20} /></span></a>
             </div>
           </motion.article>
         })}</AnimatePresence>
@@ -132,5 +134,5 @@ export default function App() {
     <AutomationDemo />
     <section id="competencias" className="section skills-section"><div className="container"><Reveal><div className="section-heading"><div><p className="eyebrow"><span>04</span> COMPETÊNCIAS</p><h2 className="section-title">As ferramentas mudam.<br />O foco é <span>resolver.</span></h2></div><p className="section-description">Tecnologias organizadas pelo que permitem construir, conectar e melhorar.</p></div><div className="skills-list">{skills.map((skill, i) => { const Icon = skillIcons[i]; return <div className="skill-row" key={skill.title}><span className="skill-index mono">0{i + 1}</span><div className="skill-title"><Icon size={22} /><div><h3>{skill.title}</h3><p>{skill.description}</p></div></div><div className="skill-tags">{skill.items.map(item => <span key={item}>{item}</span>)}</div></div> })}</div></Reveal></div></section>
     <section id="contato" className="section container contact-section"><Reveal><div className="contact-top"><p className="eyebrow"><span>05</span> PRÓXIMA CONEXÃO</p><span className="contact-location"><MapPin size={14} /> Teresina — PI</span></div><div className="contact-content"><div><h2>Vamos conectar tecnologia à sua <span>próxima solução?</span></h2><p>Estou aberto a oportunidades em automação, integrações, desenvolvimento e melhoria de processos.</p><ContactLinks /></div><div className="contact-art" aria-hidden="true"><div className="contact-orbit" /><span className="contact-icon"><ArrowUpRight size={59} strokeWidth={1.3} /></span><span className="orbit-point" /><span className="contact-art-label mono">a próxima conexão<br />começa com uma conversa.</span></div></div><div className="contact-bottom"><span><Check size={15} /> Processos mais claros. Sistemas mais conectados.</span><a href="#inicio">Voltar ao início <ChevronUp size={16} /></a></div></Reveal></section>
-  </main><footer className="site-footer"><PortfolioStats /><div className="container"><a className="footer-name" href="#inicio">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p><span className="mono">Feito com intenção e código.</span></div><VisitPrivacy /></footer><WelcomeToast /><AnimatePresence>{project && <ProjectDialog key={project.id} project={project} onClose={() => setProject(null)} />}</AnimatePresence></>
+  </main><footer className="site-footer"><PortfolioStats /><div className="container"><a className="footer-name" href="#inicio">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p><span className="mono">Feito com intenção e código.</span></div><VisitPrivacy /></footer><WelcomeToast /></>
 }
