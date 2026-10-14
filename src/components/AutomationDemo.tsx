@@ -20,17 +20,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import './automation-demo.css'
+import { createLeadSimulation, leadScenarios, type LeadIntent, type LeadStepId, type ServiceWindow } from '../lab/leads'
 
-type Intention = 'Matrícula' | 'Financeiro' | 'Suporte'
-type BusinessHours = 'open' | 'closed'
-type StepId = 'contact' | 'intent' | 'hours' | 'team' | 'forward' | 'collect' | 'return'
-type SimulationStep = { id: StepId; message: string }
-
-const teams: Record<Intention, string> = {
-  Matrícula: 'Equipe de matrículas',
-  Financeiro: 'Equipe financeira',
-  Suporte: 'Equipe de suporte',
-}
 
 function FlowNode({
   icon: Icon,
@@ -63,15 +54,15 @@ function FlowNode({
 }
 
 export default function AutomationDemo() {
-  const [businessHours, setBusinessHours] = useState<BusinessHours>('open')
-  const [intention, setIntention] = useState<Intention>('Matrícula')
-  const [steps, setSteps] = useState<SimulationStep[]>([])
+  const [businessHours, setBusinessHours] = useState<ServiceWindow>('open')
+  const [intention, setIntention] = useState<LeadIntent>('Matrícula')
+  const [steps, setSteps] = useState<ReturnType<typeof createLeadSimulation>>([])
   const [activeIndex, setActiveIndex] = useState(-1)
   const [running, setRunning] = useState(false)
   const [complete, setComplete] = useState(false)
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
   const reducedMotion = useReducedMotion()
-  const team = teams[intention]
+  const team = leadScenarios[intention].team
 
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
 
@@ -89,20 +80,7 @@ export default function AutomationDemo() {
     if (running) return
     timers.current.forEach(clearTimeout)
     timers.current = []
-    const nextSteps: SimulationStep[] = [
-      { id: 'contact', message: 'Contato de demonstração recebido.' },
-      { id: 'intent', message: `Intenção identificada: ${intention}.` },
-      { id: 'hours', message: businessHours === 'open' ? 'Horário comercial: atendimento disponível.' : 'Fora do horário: preparar retorno posterior.' },
-      ...(businessHours === 'open'
-        ? [
-            { id: 'team' as const, message: `${team} selecionada.` },
-            { id: 'forward' as const, message: 'Encaminhamento simulado. A equipe recebe o contexto da conversa.' },
-          ]
-        : [
-            { id: 'collect' as const, message: 'Dados fictícios preparados para a coleta.' },
-            { id: 'return' as const, message: `Registro local simulado para retorno sobre ${intention.toLocaleLowerCase('pt-BR')}.` },
-          ]),
-    ]
+    const nextSteps = createLeadSimulation(intention, businessHours)
     setSteps(nextSteps)
     setComplete(Boolean(reducedMotion))
     setRunning(!reducedMotion)
@@ -120,7 +98,7 @@ export default function AutomationDemo() {
     }, nextSteps.length * 640))
   }
 
-  const nodeState = (id: StepId): 'idle' | 'active' | 'complete' => {
+  const nodeState = (id: LeadStepId): 'idle' | 'active' | 'complete' => {
     const index = steps.findIndex((step) => step.id === id)
     if (index < 0 || index > activeIndex) return 'idle'
     if (complete || index < activeIndex) return 'complete'
@@ -139,8 +117,8 @@ export default function AutomationDemo() {
     <section id="demonstracao" className="section container demo-section" aria-labelledby="demo-title">
       <div className="ad-heading">
         <div>
-          <span className="eyebrow"><span>03</span> DO CONCEITO À PRÁTICA</span>
-          <h2 id="demo-title" className="section-title">Veja uma automação<br className="ad-heading-break" /> <span>acontecer.</span></h2>
+          <span className="eyebrow"><span>03</span> LABORATÓRIO DE AUTOMAÇÕES</span>
+          <h2 id="demo-title" className="section-title">Teste a lógica por<br className="ad-heading-break" /> <span>trás do fluxo.</span></h2>
         </div>
         <p className="section-description">Uma entrada, regras claras e o próximo passo certo. Altere o cenário e veja como o fluxo se adapta.</p>
       </div>
@@ -181,7 +159,7 @@ export default function AutomationDemo() {
               id="demo-intention"
               value={intention}
               disabled={running}
-              onChange={(event) => { reset(); setIntention(event.target.value as Intention) }}
+              onChange={(event) => { reset(); setIntention(event.target.value as LeadIntent) }}
             >
               <option>Matrícula</option>
               <option>Financeiro</option>
@@ -239,6 +217,7 @@ export default function AutomationDemo() {
                 >{statusText}</motion.p>
               </AnimatePresence>
             </div>
+            {steps.length > 0 && <div className="ad-operation-log" aria-label="Logs da operação">{steps.slice(0, activeIndex + 1).map(step => <p key={step.id}><b>[{step.log.level}]</b> {step.log.message}</p>)}</div>}
           </div>
         </div>
       </div>
