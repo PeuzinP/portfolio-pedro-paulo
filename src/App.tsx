@@ -28,9 +28,12 @@ function Reveal({ children, className = '' }: { children: ReactNode; className?:
   return <motion.div className={className} initial={{ opacity: 0, y: reduced ? 0 : 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .08 }} transition={{ duration: reduced ? 0 : .5 }}>{children}</motion.div>
 }
 
-type Route = { pathname: string; hash: string; scrollY: number; source: 'initial' | 'push' | 'pop' }
+type Route = { pathname: string; section?: string; normalizeHash?: boolean; scrollY: number; source: 'initial' | 'push' | 'pop' }
 
-const getRoute = (source: Route['source'] = 'initial'): Route => ({ pathname: window.location.pathname, hash: window.location.hash, scrollY: history.state?.portfolioScrollY ?? 0, source })
+const getRoute = (source: Route['source'] = 'initial'): Route => {
+  const section = window.location.hash.replace(/^#/, '') || undefined
+  return { pathname: window.location.pathname, section, normalizeHash: Boolean(section), scrollY: history.state?.portfolioScrollY ?? 0, source }
+}
 const isPortfolioRoute = (pathname: string) => pathname === '/' || pathname === '/recrutador' || /^\/projetos\/[^/]+\/?$/.test(pathname)
 
 function PageTransition({ pathname, children }: { pathname: string; children: ReactNode }) {
@@ -39,15 +42,29 @@ function PageTransition({ pathname, children }: { pathname: string; children: Re
   return <AnimatePresence mode="wait" initial={false}><motion.div key={pathname} className="page-transition" initial={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 8 }} transition={transition}>{children}</motion.div></AnimatePresence>
 }
 
-function AppShell({ route, navigate, children }: { route: Route; navigate: (url: URL) => void; children: ReactNode }) {
+function AppShell({ route, navigate, navigateToSection, children }: { route: Route; navigate: (url: URL) => void; navigateToSection: (section: string) => void; children: ReactNode }) {
+  const shell = useRef<HTMLDivElement>(null)
   useEffect(() => {
+    let observer: MutationObserver | undefined
+    const scrollToSection = () => {
+      const target = route.section ? document.getElementById(route.section) : null
+      if (!target) return false
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      if (route.normalizeHash) history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', route.pathname)
+      target === document.getElementById('conteudo') ? target.focus({ preventScroll: true }) : document.getElementById('conteudo')?.focus({ preventScroll: true })
+      return true
+    }
     const frame = requestAnimationFrame(() => {
       if (route.source === 'pop') window.scrollTo({ top: route.scrollY, behavior: 'auto' })
-      else if (route.hash) document.getElementById(route.hash.slice(1))?.scrollIntoView({ behavior: 'auto', block: 'start' })
-      else window.scrollTo({ top: 0, behavior: 'auto' })
-      document.getElementById('conteudo')?.focus({ preventScroll: true })
+      else if (route.section && !scrollToSection()) {
+        observer = new MutationObserver(() => { if (scrollToSection()) observer?.disconnect() })
+        if (shell.current) observer.observe(shell.current, { childList: true, subtree: true })
+      } else if (!route.section) {
+        window.scrollTo({ top: 0, behavior: 'auto' })
+        document.getElementById('conteudo')?.focus({ preventScroll: true })
+      }
     })
-    return () => cancelAnimationFrame(frame)
+    return () => { cancelAnimationFrame(frame); observer?.disconnect() }
   }, [route])
 
   const handleInternalLink = (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -57,16 +74,17 @@ function AppShell({ route, navigate, children }: { route: Route; navigate: (url:
     const url = new URL(anchor.href, window.location.href)
     if (url.origin !== window.location.origin || !isPortfolioRoute(url.pathname)) return
     event.preventDefault()
+    const section = anchor.dataset.section ?? url.hash.replace(/^#/, '')
+    if (section) { navigateToSection(section); return }
     navigate(url)
   }
 
-  return <div className="app-shell" onClickCapture={handleInternalLink}><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header pathname={route.pathname} /><PageTransition pathname={route.pathname}>{children}</PageTransition></div>
+  return <div className="app-shell" ref={shell} onClickCapture={handleInternalLink}><a className="skip-link" href="/" data-section="conteudo">Pular para o conteúdo</a><Header pathname={route.pathname} /><PageTransition pathname={route.pathname}>{children}</PageTransition></div>
 }
 
 function Header({ pathname }: { pathname: string }) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState('inicio')
-  const isHome = pathname === '/'
   const toggle = useRef<HTMLButtonElement>(null)
   const header = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -92,7 +110,7 @@ function Header({ pathname }: { pathname: string }) {
   }, [open])
   return <header className="site-header" ref={header}><div className="container header-inner"><a className="brand" href="/" aria-label="Pedro Paulo, início" onClick={() => setOpen(false)}><span className="brand-symbol">p<span>p</span><i /></span><span>Pedro Paulo<span className="brand-dot">.</span></span></a>
     <button className="mobile-toggle icon-button" ref={toggle} aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="main-navigation" onClick={() => setOpen(!open)}>{open ? <X size={23} /> : <Menu size={23} />}</button>
-    <nav id="main-navigation" className={open ? 'nav-open' : ''} aria-label="Navegação principal">{navigation.map(item => <a key={item.id} href={item.id === 'inicio' ? '/' : `${isHome ? '' : '/'}#${item.id}`} className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'location' : undefined} onClick={() => setOpen(false)}>{item.label}{item.id === 'contato' && <ArrowUpRight size={14} />}</a>)}</nav>
+    <nav id="main-navigation" className={open ? 'nav-open' : ''} aria-label="Navegação principal">{navigation.map(item => <a key={item.id} href="/" data-section={item.id} className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'location' : undefined} onClick={() => setOpen(false)}>{item.label}{item.id === 'contato' && <ArrowUpRight size={14} />}</a>)}</nav>
   </div></header>
 }
 
@@ -118,21 +136,32 @@ export default function App() {
   const shownProjects = projects.filter(item => filter === 'Todos' || (item.categories ?? [item.category]).includes(filter))
   const headlineWords = siteConfig.headline.replace(/\.$/, '').split(' ')
   const navigate = (url: URL) => {
-    const nextPath = `${url.pathname}${url.hash}`
-    const currentPath = `${window.location.pathname}${window.location.hash}`
+    const nextPath = url.pathname
+    const currentPath = window.location.pathname
     if (nextPath === currentPath) {
       if (!url.hash) window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
-    history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', currentPath)
+    history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', `${window.location.pathname}${window.location.hash}`)
     history.pushState({ portfolioScrollY: 0 }, '', nextPath)
-    setRoute({ pathname: url.pathname, hash: url.hash, scrollY: 0, source: 'push' })
+    setRoute({ pathname: url.pathname, scrollY: 0, source: 'push' })
+  }
+  const navigateToSection = (section: string) => {
+    if (route.pathname === '/') {
+      setRoute({ pathname: '/', section, scrollY: window.scrollY, source: 'push' })
+      return
+    }
+    history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', window.location.pathname)
+    history.pushState({ portfolioScrollY: 0 }, '', '/')
+    setRoute({ pathname: '/', section, scrollY: 0, source: 'push' })
   }
   useEffect(() => {
     if (history.state?.portfolioScrollY === undefined) history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', `${window.location.pathname}${window.location.hash}`)
     const onPopState = () => setRoute(getRoute('pop'))
+    const onHashChange = () => setRoute(getRoute('push'))
     window.addEventListener('popstate', onPopState)
-    return () => window.removeEventListener('popstate', onPopState)
+    window.addEventListener('hashchange', onHashChange)
+    return () => { window.removeEventListener('popstate', onPopState); window.removeEventListener('hashchange', onHashChange) }
   }, [])
   useEffect(() => {
     if (reduced || !window.matchMedia('(min-width: 900px)').matches) return
@@ -143,16 +172,16 @@ export default function App() {
   }, [reduced])
   const entrance = (delay: number) => ({ initial: { opacity: 0, y: reduced ? 0 : 18 }, animate: { opacity: 1, y: 0 }, transition: { duration: reduced ? 0 : .65, delay: reduced ? 0 : delay } })
   const caseStudyId = route.pathname.match(/^\/projetos\/([^/]+)\/?$/)?.[1]
-  if (route.pathname === '/recrutador') return <AppShell route={route} navigate={navigate}><RecruiterPage /></AppShell>
-  if (caseStudyId) return <AppShell route={route} navigate={navigate}><DeferredSection fallback={<RouteLoading />}><CaseStudyPage projectId={caseStudyId} /></DeferredSection><footer className="site-footer"><div className="container"><a className="footer-name" href="/">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p></div></footer></AppShell>
-  return <AppShell route={route} navigate={navigate}><main id="conteudo" tabIndex={-1}>
+  if (route.pathname === '/recrutador') return <AppShell route={route} navigate={navigate} navigateToSection={navigateToSection}><RecruiterPage /></AppShell>
+  if (caseStudyId) return <AppShell route={route} navigate={navigate} navigateToSection={navigateToSection}><DeferredSection fallback={<RouteLoading />}><CaseStudyPage projectId={caseStudyId} /></DeferredSection><footer className="site-footer"><div className="container"><a className="footer-name" href="/">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p></div></footer></AppShell>
+  return <AppShell route={route} navigate={navigate} navigateToSection={navigateToSection}><main id="conteudo" tabIndex={-1}>
     <section id="inicio" className="hero" ref={hero}><div className="hero-decoration" aria-hidden="true" /><div className="container hero-grid"><div className="hero-copy">
       <motion.div {...entrance(.05)} className="hero-availability"><span className="status-dot" /> TECNOLOGIA COM PROPÓSITO <span className="availability-line" /></motion.div>
       <motion.p {...entrance(.12)} className="hero-position">{siteConfig.positioning}</motion.p>
       <motion.h1 {...entrance(.2)}>{headlineWords.slice(0, -2).join(' ')} <span>{headlineWords.slice(-2).join(' ')}<span className="title-dot">.</span></span></motion.h1>
       <motion.p {...entrance(.24)} className="hero-description"><strong>{siteConfig.introduction}</strong></motion.p>
       <motion.p {...entrance(.28)} className="hero-description">{siteConfig.description}</motion.p>
-      <motion.div {...entrance(.36)} className="hero-buttons"><a href="#projetos" className="button button-primary">Conheça meus projetos <ArrowUpRight size={18} /></a><a href="#contato" className="button button-quiet">Vamos conversar <ArrowRight size={17} /></a></motion.div>
+      <motion.div {...entrance(.36)} className="hero-buttons"><a href="/" data-section="projetos" className="button button-primary">Conheça meus projetos <ArrowUpRight size={18} /></a><a href="/" data-section="contato" className="button button-quiet">Vamos conversar <ArrowRight size={17} /></a></motion.div>
       <motion.a
         {...entrance(.4)}
         className="recruiter-highlight"
@@ -169,7 +198,7 @@ export default function App() {
       </motion.a>
       <motion.div {...entrance(.43)} className="hero-location"><MapPin size={14} /><span>{siteConfig.location}</span><i /><span>Conectando tecnologia e processos</span></motion.div>
     </div><motion.div {...entrance(.3)} className="hero-diagram"><div className="diagram-overline"><span className="mono">01 / A LÓGICA POR TRÁS</span><span className="little-cross">+</span></div><FlowDiagram /><div className="diagram-under"><span className="mono"><span className="code-brace">{'{ }'}</span> Menos tarefas repetitivas. Mais possibilidades.</span></div></motion.div></div>
-      <div className="container hero-bottom"><a href="#sobre"><ArrowDown size={16} /> Explore as conexões</a><span className="mono">PESSOAS. PROCESSOS. TECNOLOGIA.</span></div>
+      <div className="container hero-bottom"><a href="/" data-section="sobre"><ArrowDown size={16} /> Explore as conexões</a><span className="mono">PESSOAS. PROCESSOS. TECNOLOGIA.</span></div>
     </section>
     <div className="expertise-strip"><div className="container">{[{ icon: Workflow, text: 'Automação de processos' }, { icon: Braces, text: 'Integração de sistemas' }, { icon: Network, text: 'CRM & jornada do cliente' }, { icon: Code2, text: 'Soluções web' }].map(item => <span key={item.text}><item.icon size={19} />{item.text}</span>)}</div></div>
     <section id="sobre" className="section container">

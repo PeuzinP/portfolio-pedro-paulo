@@ -1,11 +1,175 @@
-import { ArrowLeft, ArrowRight, AtSign, Download, GraduationCap, Linkedin, Mail, Sparkles } from 'lucide-react'
-import { projects, siteConfig, skills, technicalEducation } from '../data/portfolio'
-import { caseStudyHref } from '../data/caseStudies'
+import {
+  ArrowLeft,
+  ArrowRight,
+  AtSign,
+  Download,
+  GraduationCap,
+  Linkedin,
+  Mail,
+  Sparkles,
+} from "lucide-react";
+import {
+  projects,
+  siteConfig,
+  skills,
+  technicalEducation,
+} from "../data/portfolio";
+import { caseStudyHref } from "../data/caseStudies";
 
-const featured = ['reading-keepedu', 'atendimento-leads', 'avaliacoes-experiencia']
+const featured = [
+  "reading-keepedu",
+  "atendimento-leads",
+  "avaliacoes-experiencia",
+];
 
 export default function RecruiterPage() {
-  const projectsToShow = featured.map(id => projects.find(project => project.id === id)).filter(Boolean)
-  const contacts = [{ label: 'LinkedIn', href: siteConfig.contacts.linkedin, icon: Linkedin }, { label: 'E-mail', href: `mailto:${siteConfig.contacts.email}`, icon: Mail }].filter(item => item.href)
-  return <main id="conteudo" className="recruiter-page"><section className="recruiter-hero"><div className="container"><a className="case-back" href="/#inicio"><ArrowLeft size={17} />Voltar ao portfólio</a><p className="eyebrow"><span>60s</span> PERFIL PROFISSIONAL</p><h1>Automação, integrações e <span>soluções que funcionam.</span></h1><p>{siteConfig.introduction}</p><div className="recruiter-actions">{contacts.map(item => <a className="button button-primary" key={item.label} href={item.href} target={item.href.startsWith('https:') ? '_blank' : undefined} rel="noreferrer"><item.icon size={17} />{item.label}</a>)}<a className="button button-secondary" href="/#projetos">Explorar projetos <ArrowRight size={17} /></a></div></div></section><section className="section container recruiter-summary"><div><span className="mono">EM FOCO</span><h2>Experiência prática para <span>processos reais.</span></h2></div><div className="recruiter-specialties">{['Automação de processos', 'Integração de sistemas e APIs', 'Soluções web', 'CRM e jornada do cliente', 'Qualificação de leads', 'Otimização operacional'].map((item, index) => <div key={item}><span>0{index + 1}</span>{item}</div>)}</div></section><section className="section recruiter-projects"><div className="container"><p className="eyebrow"><span>PROJETOS</span> ENTREGAS EM DESTAQUE</p><div className="recruiter-project-grid">{projectsToShow.map(project => project && <article key={project.id}><Sparkles size={18} /><h2>{project.title}</h2><p><strong>Problema:</strong> {project.problem}</p><p><strong>Solução:</strong> {project.solution}</p><div className="tag-list">{project.technologies.map(tech => <span key={tech}>{tech}</span>)}</div><a href={caseStudyHref(project.id)}>Ver estudo de caso <ArrowRight size={16} /></a></article>)}</div></div></section><section className="section container recruiter-bottom"><div><p className="eyebrow"><span>BASE TÉCNICA</span> TECNOLOGIAS</p><div className="recruiter-skills">{skills.map(group => <div key={group.title}><h3>{group.title}</h3><p>{group.items.join(' · ')}</p></div>)}</div></div><div className="recruiter-education"><GraduationCap size={23} /><h2>Formação</h2><p><strong>{technicalEducation.title}</strong><br />{technicalEducation.institution} · {technicalEducation.status}</p><p><strong>Análise e Desenvolvimento de Sistemas — Superior</strong><br />Anhanguera · Concluído</p><p><strong>Engenharia de Software — Pós-graduação</strong><br />Estácio de Sá · Em andamento</p><div className="recruiter-contact">{siteConfig.contacts.resume ? <a href={siteConfig.contacts.resume}><Download size={16} />Baixar currículo</a> : <span><AtSign size={16} />Currículo PDF disponível mediante inclusão do arquivo.</span>}</div></div></section></main>
+  const projectsToShow = featured
+    .map((id) => projects.find((project) => project.id === id))
+    .filter(Boolean);
+  const contacts = [
+    { label: "LinkedIn", href: siteConfig.contacts.linkedin, icon: Linkedin },
+    {
+      label: "E-mail",
+      href: `mailto:${siteConfig.contacts.email}`,
+      icon: Mail,
+    },
+  ].filter((item) => item.href);
+  return (
+    <main id="conteudo" className="recruiter-page">
+      <section className="recruiter-hero">
+        <div className="container">
+          <a className="case-back" href="/" data-section="inicio">
+            <ArrowLeft size={17} />
+            Voltar ao portfólio
+          </a>
+          <p className="eyebrow">
+            <span>60s</span> PERFIL PROFISSIONAL
+          </p>
+          <h1>
+            Automação, integrações e <span>soluções que funcionam.</span>
+          </h1>
+          <p>{siteConfig.introduction}</p>
+          <div className="recruiter-actions">
+            {contacts.map((item) => (
+              <a
+                className="button button-primary"
+                key={item.label}
+                href={item.href}
+                target={item.href.startsWith("https:") ? "_blank" : undefined}
+                rel="noreferrer"
+              >
+                <item.icon size={17} />
+                {item.label}
+              </a>
+            ))}
+            <a className="button button-secondary" href="/" data-section="projetos">
+              Explorar projetos <ArrowRight size={17} />
+            </a>
+          </div>
+        </div>
+      </section>
+      <section className="section container recruiter-summary">
+        <div>
+          <span className="mono">EM FOCO</span>
+          <h2>
+            Experiência prática para <span>processos reais.</span>
+          </h2>
+        </div>
+        <div className="recruiter-specialties">
+          {[
+            "Automação de processos",
+            "Integração de sistemas e APIs",
+            "Soluções web",
+            "CRM e jornada do cliente",
+            "Qualificação de leads",
+            "Otimização operacional",
+          ].map((item, index) => (
+            <div key={item}>
+              <span>0{index + 1}</span>
+              {item}
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="section recruiter-projects">
+        <div className="container">
+          <p className="eyebrow">
+            <span>PROJETOS</span> ENTREGAS EM DESTAQUE
+          </p>
+          <div className="recruiter-project-grid">
+            {projectsToShow.map(
+              (project) =>
+                project && (
+                  <article key={project.id}>
+                    <Sparkles size={18} />
+                    <h2>{project.title}</h2>
+                    <p>
+                      <strong>Problema:</strong> {project.problem}
+                    </p>
+                    <p>
+                      <strong>Solução:</strong> {project.solution}
+                    </p>
+                    <div className="tag-list">
+                      {project.technologies.map((tech) => (
+                        <span key={tech}>{tech}</span>
+                      ))}
+                    </div>
+                    <a href={caseStudyHref(project.id)}>
+                      Ver estudo de caso <ArrowRight size={16} />
+                    </a>
+                  </article>
+                ),
+            )}
+          </div>
+        </div>
+      </section>
+      <section className="section container recruiter-bottom">
+        <div>
+          <p className="eyebrow">
+            <span>BASE TÉCNICA</span> TECNOLOGIAS
+          </p>
+          <div className="recruiter-skills">
+            {skills.map((group) => (
+              <div key={group.title}>
+                <h3>{group.title}</h3>
+                <p>{group.items.join(" · ")}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="recruiter-education">
+          <GraduationCap size={23} />
+          <h2>Formação</h2>
+          <p>
+            <strong>{technicalEducation.title}</strong>
+            <br />
+            {technicalEducation.institution} · {technicalEducation.status}
+          </p>
+          <p>
+            <strong>Análise e Desenvolvimento de Sistemas — Superior</strong>
+            <br />
+            Anhanguera · Concluído
+          </p>
+          <p>
+            <strong>Engenharia de Software — Pós-graduação</strong>
+            <br />
+            Estácio de Sá · Em andamento
+          </p>
+          <div className="recruiter-contact">
+            {siteConfig.contacts.resume ? (
+              <a href={siteConfig.contacts.resume}>
+                <Download size={16} />
+                Baixar currículo
+              </a>
+            ) : (
+              <span>
+                <AtSign size={16} />
+                Currículo PDF disponível mediante inclusão do arquivo.
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }
