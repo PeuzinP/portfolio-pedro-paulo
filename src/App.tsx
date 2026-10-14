@@ -14,7 +14,7 @@ import PortfolioStats from './components/PortfolioStats'
 import WelcomeToast from './components/WelcomeToast'
 import VisitPrivacy from './components/VisitPrivacy'
 
-const navigation = [{ id: 'inicio', label: 'Início' }, { id: 'sobre', label: 'Sobre' }, { id: 'projetos', label: 'Projetos' }, { id: 'competencias', label: 'Competências' }, { id: 'contato', label: 'Contato' }]
+const navigation = [{ id: 'inicio', label: 'Início' }, { id: 'sobre', label: 'Sobre' }, { id: 'projetos', label: 'Projetos' }, { id: 'demonstracao', label: 'Laboratório' }, { id: 'competencias', label: 'Competências' }, { id: 'contato', label: 'Contato' }]
 const filters = ['Todos', 'Automação', 'Integrações', 'Desenvolvimento'] as const
 const skillIcons = [Workflow, Code2, Database, Network, Terminal]
 
@@ -33,7 +33,7 @@ function Header() {
     const sections = [...document.querySelectorAll<HTMLElement>('main > section[id]')]
     const update = () => {
       const current = sections.filter(section => section.getBoundingClientRect().top < window.innerHeight * .4).at(-1)
-      if (current) setActive(current.id === 'demonstracao' ? 'projetos' : current.id)
+      if (current) setActive(current.id)
     }
     update()
     window.addEventListener('scroll', update, { passive: true })
