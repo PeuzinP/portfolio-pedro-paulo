@@ -12,6 +12,8 @@ import '@fontsource/ibm-plex-mono/latin-400.css'
 import App from './App'
 import './styles.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const root = document.getElementById('root')!
+root.removeAttribute('data-prerender')
+ReactDOM.createRoot(root).render(
   <React.StrictMode><MotionConfig reducedMotion="user"><App /></MotionConfig></React.StrictMode>,
 )
