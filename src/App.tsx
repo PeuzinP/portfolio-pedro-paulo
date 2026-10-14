@@ -14,6 +14,7 @@ import VisitPrivacy from './components/VisitPrivacy'
 const CaseStudyPage = lazy(() => import('./components/CaseStudyPage'))
 const AutomationDemo = lazy(() => import('./components/AutomationDemo'))
 const BernoulliLab = lazy(() => import('./components/BernoulliLab'))
+const RecruiterPage = lazy(() => import('./components/RecruiterPage'))
 const DeferredSection = ({ children }: { children: ReactNode }) => <Suspense fallback={<div className="deferred-section" aria-hidden="true" />}>{children}</Suspense>
 
 const navigation = [{ id: 'inicio', label: 'Início' }, { id: 'sobre', label: 'Sobre' }, { id: 'projetos', label: 'Projetos' }, { id: 'demonstracao', label: 'Laboratório' }, { id: 'competencias', label: 'Competências' }, { id: 'contato', label: 'Contato' }]
@@ -83,6 +84,7 @@ export default function App() {
   }, [reduced])
   const entrance = (delay: number) => ({ initial: { opacity: 0, y: reduced ? 0 : 18 }, animate: { opacity: 1, y: 0 }, transition: { duration: reduced ? 0 : .65, delay: reduced ? 0 : delay } })
   const caseStudyId = window.location.pathname.match(/^\/projetos\/([^/]+)\/?$/)?.[1]
+  if (window.location.pathname === '/recrutador') return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><DeferredSection><RecruiterPage /></DeferredSection></>
   if (caseStudyId) return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><DeferredSection><CaseStudyPage projectId={caseStudyId} /></DeferredSection><footer className="site-footer"><div className="container"><a className="footer-name" href="/#inicio">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p></div></footer></>
   return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><main id="conteudo">
     <section id="inicio" className="hero" ref={hero}><div className="hero-decoration" aria-hidden="true" /><div className="container hero-grid"><div className="hero-copy">
@@ -92,6 +94,7 @@ export default function App() {
       <motion.p {...entrance(.24)} className="hero-description"><strong>{siteConfig.introduction}</strong></motion.p>
       <motion.p {...entrance(.28)} className="hero-description">{siteConfig.description}</motion.p>
       <motion.div {...entrance(.36)} className="hero-buttons"><a href="#projetos" className="button button-primary">Conheça meus projetos <ArrowUpRight size={18} /></a><a href="#contato" className="button button-quiet">Vamos conversar <ArrowRight size={17} /></a></motion.div>
+      <motion.a {...entrance(.4)} className="recruiter-link" href="/recrutador">Conheça meu perfil em 60 segundos <ArrowRight size={15} /></motion.a>
       <motion.div {...entrance(.43)} className="hero-location"><MapPin size={14} /><span>{siteConfig.location}</span><i /><span>Conectando tecnologia e processos</span></motion.div>
     </div><motion.div {...entrance(.3)} className="hero-diagram"><div className="diagram-overline"><span className="mono">01 / A LÓGICA POR TRÁS</span><span className="little-cross">+</span></div><FlowDiagram /><div className="diagram-under"><span className="mono"><span className="code-brace">{'{ }'}</span> Menos tarefas repetitivas. Mais possibilidades.</span></div></motion.div></div>
       <div className="container hero-bottom"><a href="#sobre"><ArrowDown size={16} /> Explore as conexões</a><span className="mono">PESSOAS. PROCESSOS. TECNOLOGIA.</span></div>
