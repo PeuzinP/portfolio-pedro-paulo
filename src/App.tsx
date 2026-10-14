@@ -40,8 +40,10 @@ function Header() {
     }
     update()
     window.addEventListener('scroll', update, { passive: true })
+    const main = document.querySelector('main')
+    if (!main) return () => { window.removeEventListener('scroll', update) }
     const observer = new MutationObserver(update)
-    observer.observe(document.querySelector('main')!, { childList: true, subtree: true })
+    observer.observe(main, { childList: true, subtree: true })
     return () => { window.removeEventListener('scroll', update); observer.disconnect() }
   }, [])
   useEffect(() => {
