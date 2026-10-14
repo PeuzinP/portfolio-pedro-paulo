@@ -12,7 +12,7 @@ export const siteConfig = {
     instagram: 'https://www.instagram.com/_ppmendes/',
     github: '',
     whatsapp: '+55 (86) 98141-9738',
-    resume: '',
+    resume: '/curriculo-pedro-paulo.pdf',
   },
   siteUrl: 'https://pedropaulo-dev.vercel.app',
 }

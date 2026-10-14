@@ -157,7 +157,7 @@ export default function RecruiterPage() {
           </p>
           <div className="recruiter-contact">
             {siteConfig.contacts.resume ? (
-              <a href={siteConfig.contacts.resume}>
+              <a href={siteConfig.contacts.resume} download="curriculo-pedro-paulo.pdf">
                 <Download size={16} />
                 Baixar currículo
               </a>
