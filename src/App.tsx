@@ -96,7 +96,20 @@ export default function App() {
       <motion.p {...entrance(.24)} className="hero-description"><strong>{siteConfig.introduction}</strong></motion.p>
       <motion.p {...entrance(.28)} className="hero-description">{siteConfig.description}</motion.p>
       <motion.div {...entrance(.36)} className="hero-buttons"><a href="#projetos" className="button button-primary">Conheça meus projetos <ArrowUpRight size={18} /></a><a href="#contato" className="button button-quiet">Vamos conversar <ArrowRight size={17} /></a></motion.div>
-      <motion.a {...entrance(.4)} className="recruiter-link" href="/recrutador">Conheça meu perfil em 60 segundos <ArrowRight size={15} /></motion.a>
+      <motion.a
+        {...entrance(.4)}
+        className="recruiter-highlight"
+        href="/recrutador"
+        aria-label="Conheça meu perfil em 60 segundos"
+        whileHover={reduced ? undefined : { y: -3 }}
+        whileTap={reduced ? undefined : { scale: .99 }}
+        transition={{ duration: reduced ? 0 : .2 }}
+      >
+        <span className="recruiter-highlight-icon" aria-hidden="true"><BriefcaseBusiness size={21} /></span>
+        <span className="recruiter-highlight-copy"><strong>Conheça meu perfil</strong><span>Minha experiência, competências e principais projetos em uma apresentação rápida.</span></span>
+        <span className="recruiter-highlight-badge">60 SEGUNDOS</span>
+        <ArrowRight className="recruiter-highlight-arrow" size={19} aria-hidden="true" />
+      </motion.a>
       <motion.div {...entrance(.43)} className="hero-location"><MapPin size={14} /><span>{siteConfig.location}</span><i /><span>Conectando tecnologia e processos</span></motion.div>
     </div><motion.div {...entrance(.3)} className="hero-diagram"><div className="diagram-overline"><span className="mono">01 / A LÓGICA POR TRÁS</span><span className="little-cross">+</span></div><FlowDiagram /><div className="diagram-under"><span className="mono"><span className="code-brace">{'{ }'}</span> Menos tarefas repetitivas. Mais possibilidades.</span></div></motion.div></div>
       <div className="container hero-bottom"><a href="#sobre"><ArrowDown size={16} /> Explore as conexões</a><span className="mono">PESSOAS. PROCESSOS. TECNOLOGIA.</span></div>
