@@ -88,18 +88,23 @@ function Header({ pathname }: { pathname: string }) {
   const toggle = useRef<HTMLButtonElement>(null)
   const header = useRef<HTMLElement>(null)
   useEffect(() => {
+    let frame = 0
     const update = () => {
       const sections = [...document.querySelectorAll<HTMLElement>('main > section[id]')]
       const current = sections.filter(section => section.getBoundingClientRect().top < window.innerHeight * .4).at(-1)
       if (current) setActive(current.id)
     }
+    const scheduleUpdate = () => {
+      if (frame) return
+      frame = requestAnimationFrame(() => { frame = 0; update() })
+    }
     update()
-    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('scroll', scheduleUpdate, { passive: true })
     const main = document.querySelector('main')
-    if (!main) return () => { window.removeEventListener('scroll', update) }
-    const observer = new MutationObserver(update)
+    if (!main) return () => { window.removeEventListener('scroll', scheduleUpdate); cancelAnimationFrame(frame) }
+    const observer = new MutationObserver(scheduleUpdate)
     observer.observe(main, { childList: true, subtree: true })
-    return () => { window.removeEventListener('scroll', update); observer.disconnect() }
+    return () => { window.removeEventListener('scroll', scheduleUpdate); cancelAnimationFrame(frame); observer.disconnect() }
   }, [pathname])
   useEffect(() => {
     const dismiss = (event: KeyboardEvent) => { if (event.key === 'Escape' && open) { setOpen(false); toggle.current?.focus() } }
