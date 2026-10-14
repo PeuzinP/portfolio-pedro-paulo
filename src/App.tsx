@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ArrowDown, ArrowRight, ArrowUpRight, Braces, BriefcaseBusiness, Check, ChevronUp, Code2, Database, FileDown, Github, GraduationCap, Instagram, Linkedin, Mail, MapPin, Menu, MessageCircle, Network, Terminal, Workflow, X } from 'lucide-react'
 import { projects, siteConfig, skills, technicalEducation } from './data/portfolio'
@@ -10,12 +10,14 @@ import PixelAvatar from './components/PixelAvatar'
 import PortfolioStats from './components/PortfolioStats'
 import WelcomeToast from './components/WelcomeToast'
 import VisitPrivacy from './components/VisitPrivacy'
+import RecruiterPage from './components/RecruiterPage'
 
-const CaseStudyPage = lazy(() => import('./components/CaseStudyPage'))
+const loadCaseStudyPage = () => import('./components/CaseStudyPage')
+const CaseStudyPage = lazy(loadCaseStudyPage)
 const AutomationDemo = lazy(() => import('./components/AutomationDemo'))
 const BernoulliLab = lazy(() => import('./components/BernoulliLab'))
-const RecruiterPage = lazy(() => import('./components/RecruiterPage'))
-const DeferredSection = ({ children }: { children: ReactNode }) => <Suspense fallback={<div className="deferred-section" aria-hidden="true" />}>{children}</Suspense>
+const DeferredSection = ({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) => <Suspense fallback={fallback ?? <div className="deferred-section" aria-hidden="true" />}>{children}</Suspense>
+const RouteLoading = () => <div className="route-loading" role="status" aria-live="polite"><span />Carregando página…</div>
 
 const navigation = [{ id: 'inicio', label: 'Início' }, { id: 'sobre', label: 'Sobre' }, { id: 'projetos', label: 'Projetos' }, { id: 'demonstracao', label: 'Laboratório' }, { id: 'competencias', label: 'Competências' }, { id: 'contato', label: 'Contato' }]
 const filters = ['Todos', 'Automação', 'Integrações', 'Desenvolvimento'] as const
@@ -26,10 +28,45 @@ function Reveal({ children, className = '' }: { children: ReactNode; className?:
   return <motion.div className={className} initial={{ opacity: 0, y: reduced ? 0 : 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .08 }} transition={{ duration: reduced ? 0 : .5 }}>{children}</motion.div>
 }
 
-function Header() {
+type Route = { pathname: string; hash: string; scrollY: number; source: 'initial' | 'push' | 'pop' }
+
+const getRoute = (source: Route['source'] = 'initial'): Route => ({ pathname: window.location.pathname, hash: window.location.hash, scrollY: history.state?.portfolioScrollY ?? 0, source })
+const isPortfolioRoute = (pathname: string) => pathname === '/' || pathname === '/recrutador' || /^\/projetos\/[^/]+\/?$/.test(pathname)
+
+function PageTransition({ pathname, children }: { pathname: string; children: ReactNode }) {
+  const reduced = useReducedMotion()
+  const transition = { duration: reduced ? 0 : .2, ease: 'easeOut' as const }
+  return <AnimatePresence mode="wait" initial={false}><motion.div key={pathname} className="page-transition" initial={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 8 }} transition={transition}>{children}</motion.div></AnimatePresence>
+}
+
+function AppShell({ route, navigate, children }: { route: Route; navigate: (url: URL) => void; children: ReactNode }) {
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (route.source === 'pop') window.scrollTo({ top: route.scrollY, behavior: 'auto' })
+      else if (route.hash) document.getElementById(route.hash.slice(1))?.scrollIntoView({ behavior: 'auto', block: 'start' })
+      else window.scrollTo({ top: 0, behavior: 'auto' })
+      document.getElementById('conteudo')?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [route])
+
+  const handleInternalLink = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    const anchor = (event.target as Element).closest<HTMLAnchorElement>('a[href]')
+    if (!anchor || anchor.target || anchor.hasAttribute('download')) return
+    const url = new URL(anchor.href, window.location.href)
+    if (url.origin !== window.location.origin || !isPortfolioRoute(url.pathname)) return
+    event.preventDefault()
+    navigate(url)
+  }
+
+  return <div className="app-shell" onClickCapture={handleInternalLink}><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header pathname={route.pathname} /><PageTransition pathname={route.pathname}>{children}</PageTransition></div>
+}
+
+function Header({ pathname }: { pathname: string }) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState('inicio')
-  const isHome = window.location.pathname === '/'
+  const isHome = pathname === '/'
   const toggle = useRef<HTMLButtonElement>(null)
   const header = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -45,7 +82,7 @@ function Header() {
     const observer = new MutationObserver(update)
     observer.observe(main, { childList: true, subtree: true })
     return () => { window.removeEventListener('scroll', update); observer.disconnect() }
-  }, [])
+  }, [pathname])
   useEffect(() => {
     const dismiss = (event: KeyboardEvent) => { if (event.key === 'Escape' && open) { setOpen(false); toggle.current?.focus() } }
     const outside = (event: PointerEvent) => { if (open && !header.current?.contains(event.target as Node)) setOpen(false) }
@@ -75,10 +112,28 @@ function ContactLinks() {
 
 export default function App() {
   const [filter, setFilter] = useState<(typeof filters)[number]>('Todos')
+  const [route, setRoute] = useState<Route>(() => getRoute())
   const reduced = useReducedMotion()
   const hero = useRef<HTMLElement>(null)
   const shownProjects = projects.filter(item => filter === 'Todos' || (item.categories ?? [item.category]).includes(filter))
   const headlineWords = siteConfig.headline.replace(/\.$/, '').split(' ')
+  const navigate = (url: URL) => {
+    const nextPath = `${url.pathname}${url.hash}`
+    const currentPath = `${window.location.pathname}${window.location.hash}`
+    if (nextPath === currentPath) {
+      if (!url.hash) window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', currentPath)
+    history.pushState({ portfolioScrollY: 0 }, '', nextPath)
+    setRoute({ pathname: url.pathname, hash: url.hash, scrollY: 0, source: 'push' })
+  }
+  useEffect(() => {
+    if (history.state?.portfolioScrollY === undefined) history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', `${window.location.pathname}${window.location.hash}`)
+    const onPopState = () => setRoute(getRoute('pop'))
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
   useEffect(() => {
     if (reduced || !window.matchMedia('(min-width: 900px)').matches) return
     let raf = 0
@@ -87,10 +142,10 @@ export default function App() {
     return () => { window.removeEventListener('scroll', update); cancelAnimationFrame(raf) }
   }, [reduced])
   const entrance = (delay: number) => ({ initial: { opacity: 0, y: reduced ? 0 : 18 }, animate: { opacity: 1, y: 0 }, transition: { duration: reduced ? 0 : .65, delay: reduced ? 0 : delay } })
-  const caseStudyId = window.location.pathname.match(/^\/projetos\/([^/]+)\/?$/)?.[1]
-  if (window.location.pathname === '/recrutador') return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><DeferredSection><RecruiterPage /></DeferredSection></>
-  if (caseStudyId) return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><DeferredSection><CaseStudyPage projectId={caseStudyId} /></DeferredSection><footer className="site-footer"><div className="container"><a className="footer-name" href="/">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p></div></footer></>
-  return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><main id="conteudo">
+  const caseStudyId = route.pathname.match(/^\/projetos\/([^/]+)\/?$/)?.[1]
+  if (route.pathname === '/recrutador') return <AppShell route={route} navigate={navigate}><RecruiterPage /></AppShell>
+  if (caseStudyId) return <AppShell route={route} navigate={navigate}><DeferredSection fallback={<RouteLoading />}><CaseStudyPage projectId={caseStudyId} /></DeferredSection><footer className="site-footer"><div className="container"><a className="footer-name" href="/">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p></div></footer></AppShell>
+  return <AppShell route={route} navigate={navigate}><main id="conteudo" tabIndex={-1}>
     <section id="inicio" className="hero" ref={hero}><div className="hero-decoration" aria-hidden="true" /><div className="container hero-grid"><div className="hero-copy">
       <motion.div {...entrance(.05)} className="hero-availability"><span className="status-dot" /> TECNOLOGIA COM PROPÓSITO <span className="availability-line" /></motion.div>
       <motion.p {...entrance(.12)} className="hero-position">{siteConfig.positioning}</motion.p>
@@ -148,7 +203,7 @@ export default function App() {
               {item.featured && <span className="featured-subtitle">{item.shortTitle}</span>}
               <p>{item.description}</p>
               <div className="tag-list">{visibleTechnologies.map(tech => <span key={tech}>{tech}</span>)}{item.technologies.length > visibleTechnologies.length && <span aria-label={`${item.technologies.length - visibleTechnologies.length} outras tecnologias nos detalhes`}>+{item.technologies.length - visibleTechnologies.length}</span>}</div>
-              <a className="explore-project" href={caseStudyHref(item.id)}>Ver estudo de caso <span><ArrowUpRight size={20} /></span></a>
+              <a className="explore-project" href={caseStudyHref(item.id)} onMouseEnter={() => { void loadCaseStudyPage() }} onFocus={() => { void loadCaseStudyPage() }} onTouchStart={() => { void loadCaseStudyPage() }}>Ver estudo de caso <span><ArrowUpRight size={20} /></span></a>
             </div>
           </motion.article>
         })}</AnimatePresence>
@@ -158,5 +213,5 @@ export default function App() {
     <DeferredSection><BernoulliLab /></DeferredSection>
     <section id="competencias" className="section skills-section"><div className="container"><Reveal><div className="section-heading"><div><p className="eyebrow"><span>04</span> COMPETÊNCIAS</p><h2 className="section-title">As ferramentas mudam.<br />O foco é <span>resolver.</span></h2></div><p className="section-description">Tecnologias organizadas pelo que permitem construir, conectar e melhorar.</p></div><div className="skills-list">{skills.map((skill, i) => { const Icon = skillIcons[i]; return <div className="skill-row" key={skill.title}><span className="skill-index mono">0{i + 1}</span><div className="skill-title"><Icon size={22} /><div><h3>{skill.title}</h3><p>{skill.description}</p></div></div><div className="skill-tags">{skill.items.map(item => <span key={item}>{item}</span>)}</div></div> })}</div></Reveal></div></section>
     <section id="contato" className="section container contact-section"><Reveal><div className="contact-top"><p className="eyebrow"><span>05</span> PRÓXIMA CONEXÃO</p><span className="contact-location"><MapPin size={14} /> Teresina — PI</span></div><div className="contact-content"><div><h2>Vamos conectar tecnologia à sua <span>próxima solução?</span></h2><p>Estou aberto a oportunidades em automação, integrações, desenvolvimento e melhoria de processos.</p><ContactLinks /></div><div className="contact-art" aria-hidden="true"><div className="contact-orbit" /><span className="contact-icon"><ArrowUpRight size={59} strokeWidth={1.3} /></span><span className="orbit-point" /><span className="contact-art-label mono">a próxima conexão<br />começa com uma conversa.</span></div></div><div className="contact-bottom"><span><Check size={15} /> Processos mais claros. Sistemas mais conectados.</span><a href="/">Voltar ao início <ChevronUp size={16} /></a></div></Reveal></section>
-  </main><footer className="site-footer"><PortfolioStats /><div className="container"><a className="footer-name" href="/">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p><span className="mono">Feito com intenção e código.</span></div><VisitPrivacy /></footer><WelcomeToast /></>
+  </main><footer className="site-footer"><PortfolioStats /><div className="container"><a className="footer-name" href="/">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p><span className="mono">Feito com intenção e código.</span></div><VisitPrivacy /></footer><WelcomeToast /></AppShell>
 }
