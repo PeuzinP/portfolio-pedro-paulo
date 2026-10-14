@@ -33,14 +33,16 @@ function Header() {
   const toggle = useRef<HTMLButtonElement>(null)
   const header = useRef<HTMLElement>(null)
   useEffect(() => {
-    const sections = [...document.querySelectorAll<HTMLElement>('main > section[id]')]
     const update = () => {
+      const sections = [...document.querySelectorAll<HTMLElement>('main > section[id]')]
       const current = sections.filter(section => section.getBoundingClientRect().top < window.innerHeight * .4).at(-1)
       if (current) setActive(current.id)
     }
     update()
     window.addEventListener('scroll', update, { passive: true })
-    return () => window.removeEventListener('scroll', update)
+    const observer = new MutationObserver(update)
+    observer.observe(document.querySelector('main')!, { childList: true, subtree: true })
+    return () => { window.removeEventListener('scroll', update); observer.disconnect() }
   }, [])
   useEffect(() => {
     const dismiss = (event: KeyboardEvent) => { if (event.key === 'Escape' && open) { setOpen(false); toggle.current?.focus() } }
