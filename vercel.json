@@ -3,5 +3,10 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "functions": { "api/visits.ts": { "maxDuration": 10 } }
+  "functions": {
+    "api/visits.ts": {
+      "maxDuration": 10,
+      "includeFiles": "{server,shared}/**"
+    }
+  }
 }
