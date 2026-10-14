@@ -21,6 +21,7 @@ svg { flex-shrink:0; }
 .container { width:min(1220px,calc(100% - 112px)); margin-inline:auto; }
 .mono { font-family:'IBM Plex Mono',monospace; }
 .section { padding-block:110px; scroll-margin-top:20px; }
+.deferred-section { min-height:180px; }
 .eyebrow { display:flex; align-items:center; gap:13px; font:11px 'IBM Plex Mono',monospace; letter-spacing:1.8px; color:#c1cbd2; margin-bottom:25px; }
 .eyebrow > span { color:var(--cyan); font-size:10px; }
 .section-title { font-size:clamp(32px,3.35vw,46px); letter-spacing:-1.7px; line-height:1.18; font-weight:500; }

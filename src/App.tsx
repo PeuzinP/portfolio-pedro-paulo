@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ArrowDown, ArrowRight, ArrowUpRight, Braces, BriefcaseBusiness, Check, ChevronUp, Code2, Database, FileDown, Github, GraduationCap, Instagram, Linkedin, Mail, MapPin, Menu, MessageCircle, Network, Terminal, Workflow, X } from 'lucide-react'
@@ -6,13 +6,15 @@ import { projects, siteConfig, skills, technicalEducation } from './data/portfol
 import { caseStudyHref } from './data/caseStudies'
 import FlowDiagram from './components/FlowDiagram'
 import ProjectVisual from './components/ProjectVisual'
-import CaseStudyPage from './components/CaseStudyPage'
-import AutomationDemo from './components/AutomationDemo'
-import BernoulliLab from './components/BernoulliLab'
 import PixelAvatar from './components/PixelAvatar'
 import PortfolioStats from './components/PortfolioStats'
 import WelcomeToast from './components/WelcomeToast'
 import VisitPrivacy from './components/VisitPrivacy'
+
+const CaseStudyPage = lazy(() => import('./components/CaseStudyPage'))
+const AutomationDemo = lazy(() => import('./components/AutomationDemo'))
+const BernoulliLab = lazy(() => import('./components/BernoulliLab'))
+const DeferredSection = ({ children }: { children: ReactNode }) => <Suspense fallback={<div className="deferred-section" aria-hidden="true" />}>{children}</Suspense>
 
 const navigation = [{ id: 'inicio', label: 'Início' }, { id: 'sobre', label: 'Sobre' }, { id: 'projetos', label: 'Projetos' }, { id: 'demonstracao', label: 'Laboratório' }, { id: 'competencias', label: 'Competências' }, { id: 'contato', label: 'Contato' }]
 const filters = ['Todos', 'Automação', 'Integrações', 'Desenvolvimento'] as const
@@ -81,7 +83,7 @@ export default function App() {
   }, [reduced])
   const entrance = (delay: number) => ({ initial: { opacity: 0, y: reduced ? 0 : 18 }, animate: { opacity: 1, y: 0 }, transition: { duration: reduced ? 0 : .65, delay: reduced ? 0 : delay } })
   const caseStudyId = window.location.pathname.match(/^\/projetos\/([^/]+)\/?$/)?.[1]
-  if (caseStudyId) return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><CaseStudyPage projectId={caseStudyId} /><footer className="site-footer"><div className="container"><a className="footer-name" href="/#inicio">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p></div></footer></>
+  if (caseStudyId) return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><DeferredSection><CaseStudyPage projectId={caseStudyId} /></DeferredSection><footer className="site-footer"><div className="container"><a className="footer-name" href="/#inicio">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p></div></footer></>
   return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><Header /><main id="conteudo">
     <section id="inicio" className="hero" ref={hero}><div className="hero-decoration" aria-hidden="true" /><div className="container hero-grid"><div className="hero-copy">
       <motion.div {...entrance(.05)} className="hero-availability"><span className="status-dot" /> TECNOLOGIA COM PROPÓSITO <span className="availability-line" /></motion.div>
@@ -132,8 +134,8 @@ export default function App() {
         })}</AnimatePresence>
       </motion.div>
     </div></section>
-    <AutomationDemo />
-    <BernoulliLab />
+    <DeferredSection><AutomationDemo /></DeferredSection>
+    <DeferredSection><BernoulliLab /></DeferredSection>
     <section id="competencias" className="section skills-section"><div className="container"><Reveal><div className="section-heading"><div><p className="eyebrow"><span>04</span> COMPETÊNCIAS</p><h2 className="section-title">As ferramentas mudam.<br />O foco é <span>resolver.</span></h2></div><p className="section-description">Tecnologias organizadas pelo que permitem construir, conectar e melhorar.</p></div><div className="skills-list">{skills.map((skill, i) => { const Icon = skillIcons[i]; return <div className="skill-row" key={skill.title}><span className="skill-index mono">0{i + 1}</span><div className="skill-title"><Icon size={22} /><div><h3>{skill.title}</h3><p>{skill.description}</p></div></div><div className="skill-tags">{skill.items.map(item => <span key={item}>{item}</span>)}</div></div> })}</div></Reveal></div></section>
     <section id="contato" className="section container contact-section"><Reveal><div className="contact-top"><p className="eyebrow"><span>05</span> PRÓXIMA CONEXÃO</p><span className="contact-location"><MapPin size={14} /> Teresina — PI</span></div><div className="contact-content"><div><h2>Vamos conectar tecnologia à sua <span>próxima solução?</span></h2><p>Estou aberto a oportunidades em automação, integrações, desenvolvimento e melhoria de processos.</p><ContactLinks /></div><div className="contact-art" aria-hidden="true"><div className="contact-orbit" /><span className="contact-icon"><ArrowUpRight size={59} strokeWidth={1.3} /></span><span className="orbit-point" /><span className="contact-art-label mono">a próxima conexão<br />começa com uma conversa.</span></div></div><div className="contact-bottom"><span><Check size={15} /> Processos mais claros. Sistemas mais conectados.</span><a href="#inicio">Voltar ao início <ChevronUp size={16} /></a></div></Reveal></section>
   </main><footer className="site-footer"><PortfolioStats /><div className="container"><a className="footer-name" href="#inicio">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p><span className="mono">Feito com intenção e código.</span></div><VisitPrivacy /></footer><WelcomeToast /></>
