@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useLayoutEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import { MotionConfig } from 'motion/react'
 import '@fontsource/dm-sans/latin-400.css'
@@ -13,7 +13,11 @@ import App from './App'
 import './styles.css'
 
 const root = document.getElementById('root')!
-root.removeAttribute('data-prerender')
+function PortfolioReady() {
+  // Reveal only after React has replaced the SEO fallback, before the browser paints.
+  useLayoutEffect(() => { root.removeAttribute('data-prerender') }, [])
+  return <App />
+}
 ReactDOM.createRoot(root).render(
-  <React.StrictMode><MotionConfig reducedMotion="user"><App /></MotionConfig></React.StrictMode>,
+  <React.StrictMode><MotionConfig reducedMotion="user"><PortfolioReady /></MotionConfig></React.StrictMode>,
 )

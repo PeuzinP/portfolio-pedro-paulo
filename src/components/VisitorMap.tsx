@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import type { VisitStats } from '../../shared/visits'
 import { BRAZIL_STATES } from '../../shared/brazil-states'
@@ -19,11 +19,50 @@ export default function VisitorMap({ stats }: { stats: VisitStats | null }) {
   const [stateAttempt, setStateAttempt] = useState(0)
   const [hoveredState, setHoveredState] = useState<string | null>(null)
   const [selectedState, setSelectedState] = useState<string | null>(null)
-  const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null)
+  const pointer = useRef<{ x: number; y: number } | null>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
   const [view, setView] = useState(world)
   const [dragging, setDragging] = useState(false)
   const drag = useRef<{ x: number; y: number; view: typeof world; moved: boolean } | null>(null)
   const reduced = useMotionPreference()
+  const svgRef = useRef<SVGSVGElement>(null)
+  const patternRef = useRef<SVGPatternElement>(null)
+  const renderedWidth = useRef(360)
+  const mapWidth = useRef(360)
+  function positionTooltip() {
+    const tooltip = tooltipRef.current
+    const stage = stageRef.current
+    if (!tooltip || !stage) return
+    if (!pointer.current) { tooltip.style.visibility = 'hidden'; return }
+    const box = stage.getBoundingClientRect()
+    const x = pointer.current.x - box.left
+    const y = pointer.current.y - box.top
+    const left = Math.max(8, Math.min(x + 10, stage.clientWidth - tooltip.offsetWidth - 8))
+    const top = Math.max(8, Math.min(y + 12, stage.clientHeight - tooltip.offsetHeight - 8))
+    tooltip.style.left = `${left}px`
+    tooltip.style.top = `${top}px`
+    tooltip.style.visibility = 'visible'
+  }
+  useLayoutEffect(positionTooltip, [hoveredState, dragging])
+  function updateDots(width: number) {
+    mapWidth.current = width
+    // Keep the pattern at 4 CSS pixels, including during animated zoom.
+    patternRef.current?.setAttribute('patternTransform', `scale(${width / renderedWidth.current * 4 / 1.5})`)
+  }
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!svg) return
+    const resize = () => {
+      renderedWidth.current = Math.max(1, svg.getBoundingClientRect().width)
+      updateDots(mapWidth.current)
+      positionTooltip()
+    }
+    resize()
+    const observer = new ResizeObserver(resize)
+    observer.observe(svg)
+    return () => observer.disconnect()
+  }, [countries.length])
   useEffect(() => {
     const controller = new AbortController()
     setError(false)
@@ -58,12 +97,12 @@ export default function VisitorMap({ stats }: { stats: VisitStats | null }) {
   }
   const label = (code: string) => names.of(code) ?? code
   const details = (code: string) => `${label(code)} · ${number.format(counts.get(code) ?? 0)} visualizações · ${total ? ((counts.get(code) ?? 0) / total * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0'}% do total`
-  const reset = () => { setSelected(null); setHovered(null); setSelectedState(null); setHoveredState(null); setPointer(null); setView(world) }
+  const reset = () => { setSelected(null); setHovered(null); setSelectedState(null); setHoveredState(null); pointer.current = null; setView(world) }
   function select(code: string) {
     setSelected(code)
     setSelectedState(null)
     setHoveredState(null)
-    setPointer(null)
+    pointer.current = null
     const country = countries.find(item => item.code === code)
     if (!country) { setView(world); return }
     const [x1,y1,x2,y2] = country.bounds
@@ -76,7 +115,7 @@ export default function VisitorMap({ stats }: { stats: VisitStats | null }) {
     setSelected('BR')
     setSelectedState(code)
     setHoveredState(null)
-    setPointer(null)
+    pointer.current = null
     const [x1, y1, x2, y2] = state.bounds
     const width = Math.max(12, (x2 - x1) * 1.5, (y2 - y1) * 3)
     setView({ x: (x1 + x2 - width) / 2, y: (y1 + y2 - width / 2) / 2, width, height: width / 2 })
@@ -92,8 +131,8 @@ export default function VisitorMap({ stats }: { stats: VisitStats | null }) {
         <button type="button" onClick={reset}>Visão mundial</button>
         <button type="button" onClick={() => select('BR')}>{exploringBrazil ? 'Ver todo o Brasil' : 'Explorar estados do Brasil'}</button>
       </div>
-      <div className="visitor-map-stage" aria-busy={!countries.length && !error}>
-        {error ? <p role="alert">Não foi possível carregar o mapa. <button onClick={() => setAttempt(n => n+1)}>Tentar novamente</button></p> : !countries.length ? <p role="status">Carregando mapa…</p> : <motion.svg initial={false} animate={{ viewBox: `${view.x} ${view.y} ${view.width} ${view.height}` }} transition={{ duration: reduced || dragging ? 0 : .35 }} role="group" aria-label="Mapa-múndi interativo de visualizações" style={{ touchAction: view.width < 360 ? 'none' : 'pan-y' }}
+      <div className="visitor-map-stage" ref={stageRef} aria-busy={!countries.length && !error}>
+        {error ? <p role="alert">Não foi possível carregar o mapa. <button onClick={() => setAttempt(n => n+1)}>Tentar novamente</button></p> : !countries.length ? <p role="status">Carregando mapa…</p> : <motion.svg ref={svgRef} initial={false} animate={{ viewBox: `${view.x} ${view.y} ${view.width} ${view.height}` }} transition={{ duration: reduced || dragging ? 0 : .35 }} onUpdate={latest => { if (typeof latest.viewBox === 'string') updateDots(Number(latest.viewBox.split(' ')[2])) }} role="group" aria-label="Mapa-múndi interativo de visualizações" style={{ touchAction: view.width < 360 ? 'none' : 'pan-y' }}
           onKeyDown={e => {
             if (e.key === 'Escape') reset()
             if (e.key === '+') zoom(.7)
@@ -102,11 +141,11 @@ export default function VisitorMap({ stats }: { stats: VisitStats | null }) {
             if (delta[e.key] && view.width < 360) { e.preventDefault(); const [dx,dy] = delta[e.key]; setView(v => ({...v,x:v.x+dx*v.width*.1,y:v.y+dy*v.height*.1})) }
           }}
           onPointerDown={e => { if (view.width < 360 && e.isPrimary) { drag.current={x:e.clientX,y:e.clientY,view,moved:false}; e.currentTarget.setPointerCapture(e.pointerId) } }}
-          onPointerMove={e => { const d=drag.current; if (!d) { if (e.pointerType === 'mouse') { const box=e.currentTarget.getBoundingClientRect(); setPointer({x:(e.clientX-box.left)/box.width*100,y:(e.clientY-box.top)/box.height*100}) } return }; const dx=e.clientX-d.x,dy=e.clientY-d.y; if (Math.hypot(dx,dy)>5) { d.moved=true; setDragging(true); setHoveredState(null); setPointer(null); const scale=d.view.width/e.currentTarget.getBoundingClientRect().width; setView({...d.view,x:d.view.x-dx*scale,y:d.view.y-dy*scale}) } }}
-          onPointerLeave={() => { setHoveredState(null); setPointer(null) }}
+          onPointerMove={e => { const d=drag.current; if (!d) { if (e.pointerType === 'mouse') { pointer.current={x:e.clientX,y:e.clientY}; positionTooltip() } return }; const dx=e.clientX-d.x,dy=e.clientY-d.y; if (Math.hypot(dx,dy)>5) { d.moved=true; setDragging(true); setHoveredState(null); pointer.current=null; const scale=d.view.width/e.currentTarget.getBoundingClientRect().width; setView({...d.view,x:d.view.x-dx*scale,y:d.view.y-dy*scale}) } }}
+          onPointerLeave={() => { setHovered(null); setHoveredState(null); pointer.current=null }}
           onPointerUp={e => { const d=drag.current; if (d && !d.moved) { const hit=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-state], [data-country]') as SVGElement | null; if (hit?.dataset.state) selectState(hit.dataset.state); else if (hit?.dataset.country) select(hit.dataset.country) } drag.current=null; setDragging(false) }}
           onPointerCancel={() => { drag.current=null; setDragging(false) }}>
-          <defs><pattern id="visitor-dots" width="1.5" height="1.5" patternUnits="userSpaceOnUse"><circle cx=".75" cy=".75" r=".48" fill="white" /></pattern><mask id="visitor-dot-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="180"><rect width="360" height="180" fill="url(#visitor-dots)" /></mask></defs>
+          <defs><pattern ref={patternRef} id="visitor-dots" width="1.5" height="1.5" patternUnits="userSpaceOnUse"><circle cx=".75" cy=".75" r=".42" fill="white" /></pattern><mask id="visitor-dot-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="180"><rect width="360" height="180" fill="url(#visitor-dots)" /></mask></defs>
           <g mask="url(#visitor-dot-mask)" style={{ transition: reduced || dragging ? 'none' : 'color 220ms ease' }}>
           {countries.map(country => {
             const count=counts.get(country.code) ?? 0
@@ -116,24 +155,23 @@ export default function VisitorMap({ stats }: { stats: VisitStats | null }) {
               onClick={() => { if (view.width===360) select(country.code) }} onKeyDown={e => { if (e.key==='Enter' || e.key===' ') { e.preventDefault(); select(country.code) } }}><title>{details(country.code)}</title></path>
           })}</g>
           {exploringBrazil && states.length > 0 && <g aria-label="Estados do Brasil">
-            <defs><pattern id="visitor-state-dots" width=".55" height=".55" patternUnits="userSpaceOnUse"><circle cx=".275" cy=".275" r=".18" fill="white" /></pattern><mask id="visitor-state-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="180"><rect width="360" height="180" fill="url(#visitor-state-dots)" /></mask></defs>
             {states.map(state => {
               const active = selectedState === state.code || hoveredState === state.code
               const views = stateCounts.get(state.code) ?? 0
               return <g key={state.code}>
                 <path d={state.path} fill="#101920" pointerEvents="none" />
-                <path className="visitor-state" data-state={state.code} d={state.path} fill="currentColor" fillRule="evenodd" mask="url(#visitor-state-mask)" style={{ color: active ? '#b9ffff' : views ? `hsl(179 60% ${32 + Math.sqrt(views/stateMaximum)*40}%)` : '#40555f' }}
+                <path className="visitor-state" data-state={state.code} d={state.path} fill="currentColor" fillRule="evenodd" mask="url(#visitor-dot-mask)" vectorEffect="non-scaling-stroke" style={{ color: active ? '#7de0dc' : views ? `hsl(179 60% ${32 + Math.sqrt(views/stateMaximum)*40}%)` : '#40555f' }}
                   role="button" tabIndex={0} aria-label={stateDetails(state.code)} aria-pressed={selectedState === state.code}
                   onMouseEnter={() => { setHoveredState(state.code); setHovered(null) }} onMouseLeave={() => setHoveredState(null)}
-                  onFocus={() => { setHoveredState(state.code); setHovered(null); setPointer(null) }} onBlur={() => setHoveredState(null)}
+                  onFocus={() => { setHoveredState(state.code); setHovered(null); pointer.current=null }} onBlur={() => setHoveredState(null)}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectState(state.code) } }}
                   onClick={() => { if (view.width === 360) selectState(state.code) }}><title>{stateDetails(state.code)}</title></path>
-                <path className="visitor-state-border" d={state.path} fill="none" stroke={active ? '#e6ffff' : '#78949c'} strokeWidth={active ? 1.5 : .65} vectorEffect="non-scaling-stroke" pointerEvents="none" />
+                <path className="visitor-state-border" d={state.path} fill="none" stroke={active ? '#94dedc' : '#607b85'} strokeWidth={active ? 1.2 : .65} vectorEffect="non-scaling-stroke" pointerEvents="none" />
               </g>
             })}
           </g>}
         </motion.svg>}
-        {exploringBrazil && hoveredState && pointer && !dragging && <div className="visitor-state-tooltip" aria-hidden="true" style={{left:`${Math.max(4,Math.min(72,pointer.x))}%`,top:`${Math.min(75,pointer.y)}%`}}>{BRAZIL_STATES[hoveredState]} ({hoveredState})</div>}
+        {exploringBrazil && hoveredState && !dragging && <div ref={tooltipRef} className="visitor-state-tooltip" aria-hidden="true">{BRAZIL_STATES[hoveredState]} ({hoveredState})</div>}
       </div>
       {exploringBrazil && !states.length && <p role={stateError ? 'alert' : 'status'}>{stateError ? <>Não foi possível carregar os estados. <button type="button" onClick={() => setStateAttempt(n => n+1)}>Tentar novamente</button></> : 'Carregando estados do Brasil…'}</p>}
       <p className="visitor-tooltip" role="status">{hoveredState ? stateDetails(hoveredState) : hovered ? details(hovered) : selectedState ? stateDetails(selectedState) : exploringBrazil ? 'Passe o mouse ou toque em um estado para ver seu nome e os acessos registrados.' : 'Passe o mouse ou toque em um país para explorar. Selecione o Brasil para ver os estados.'}</p>

@@ -129,3 +129,11 @@ Novas visualizações autorizadas com país `BR` e um `x-vercel-ip-country-regio
 Acessos brasileiros anteriores à ativação ou sem região válida ficam em **Estado não identificado**, sem atribuição fictícia. Se a API implantada ainda não enviar os campos novos, a interface mostra os nomes dos estados e informa **Contagem por estado ainda indisponível**, sem supor zero. A localização é aproximada pela rede, pode ser afetada por VPN e não equivale a GPS. Municípios não são coletados nem exibidos nesta alteração.
 
 Não é necessária nova credencial: fazer novo deploy na Vercel mantendo o banco, namespace e segredos existentes ativa a agregação estadual para novos eventos. Os testes locais usam respostas controladas; a verificação com Redis real continua dependendo das credenciais externas.
+
+## Correções de zoom e primeira carga
+
+O padrão pontilhado do mapa mantém espaçamento de 4 pixels CSS durante o zoom animado e ao redimensionar a janela. O foco dos estados usa apenas o contorno auxiliar com `non-scaling-stroke`, sem aplicar o traço branco ao preenchimento mascarado. Isso evita pontos gigantes e manchas brancas sobre a região selecionada.
+
+A inicialização em `src/main.tsx` remove `data-prerender` somente em `useLayoutEffect`, após o React substituir o HTML de SEO e antes da pintura. Assim, o conteúdo simplificado não aparece entre o carregamento do JavaScript e a montagem do aplicativo. Sem JavaScript, o conteúdo de SEO continua legível.
+
+Validação específica: `npm run build`, `npx playwright test tests/visitor-map.spec.ts` e, após o build, `npx playwright test --config=playwright.production.config.ts`. A configuração de produção serve `dist` na porta 5174 e verifica cargas com JavaScript atrasado na home, recrutador e estudo de caso, além do cenário sem JavaScript.

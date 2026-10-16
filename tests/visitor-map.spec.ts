@@ -115,3 +115,81 @@ test('state geometry failure can retry without hiding the country map',async({pa
  failed=false;await page.getByRole('alert').getByRole('button',{name:'Tentar novamente'}).click()
  await expect(page.locator('[data-state]')).toHaveCount(27)
 })
+
+test('map dots and focus borders remain small at state zoom and on resize', async ({page}) => {
+  await setup(page)
+  const svg = page.locator('.visitor-map-stage svg')
+  const dotSpacing = () => page.locator('#visitor-dots').evaluate(element => {
+    const pattern = element as SVGPatternElement
+    return pattern.width.baseVal.value * pattern.patternTransform.baseVal.consolidate()!.matrix.a * pattern.ownerSVGElement!.getScreenCTM()!.a
+  })
+  await expect.poll(dotSpacing).toBeCloseTo(4, 1)
+  await page.getByRole('button', {name:'Explorar estados do Brasil',exact:true}).click()
+  const pi = page.locator('[data-state="PI"]')
+  await expect(pi).toBeVisible()
+  await pi.focus(); await page.keyboard.press('Enter')
+  await expect(pi).toHaveAttribute('aria-pressed','true')
+  await expect.poll(async () => Number((await svg.getAttribute('viewBox'))?.split(' ')[2])).toBeLessThan(35)
+  await expect.poll(dotSpacing).toBeCloseTo(4, 1)
+  expect(await pi.evaluate(element => getComputedStyle(element).stroke)).toBe('none')
+  const border = page.locator('[data-state="PI"] + .visitor-state-border')
+  await expect(border).toHaveAttribute('vector-effect','non-scaling-stroke')
+  expect(await border.evaluate(element => parseFloat(getComputedStyle(element).strokeWidth))).toBeLessThanOrEqual(1.5)
+  await page.locator('.visitor-map-column').screenshot({path:'artifacts/brazil-states-piaui-fixed.png'})
+  await page.setViewportSize({width:375,height:812})
+  await expect.poll(dotSpacing).toBeCloseTo(4, 1)
+  await page.getByRole('button',{name:'Visão mundial',exact:true}).click()
+  await expect(svg).toHaveAttribute('viewBox','0 0 360 180')
+  await expect.poll(dotSpacing).toBeCloseTo(4, 1)
+})
+
+test('long state tooltips stay inside the map at narrow and wide widths', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'reduce'})
+  await setup(page)
+  await page.getByRole('button',{name:'Explorar estados do Brasil',exact:true}).click()
+  await expect(page.locator('[data-state="RN"]')).toBeVisible()
+  const stage = page.locator('.visitor-map-stage')
+  const svg = stage.locator('svg')
+  for (const width of [360,390,768,1024,1440]) {
+    await page.setViewportSize({width,height:900})
+    await stage.scrollIntoViewIfNeeded()
+    // Natal is near the eastern edge; its long state name previously got clipped.
+    const point = await svg.evaluate(element => {
+      const matrix=(element as SVGSVGElement).getScreenCTM()!
+      const point=new DOMPoint(180-35.21,90+5.80).matrixTransform(matrix)
+      return {x:point.x,y:point.y}
+    })
+    await page.mouse.move(point.x,point.y)
+    const tooltip=page.locator('.visitor-state-tooltip')
+    await expect(tooltip).toHaveText('Rio Grande do Norte (RN)')
+    await expect(tooltip).toBeVisible()
+    const mapBox=(await stage.boundingBox())!
+    const tipBox=(await tooltip.boundingBox())!
+    expect(tipBox.x).toBeGreaterThanOrEqual(mapBox.x)
+    expect(tipBox.x+tipBox.width).toBeLessThanOrEqual(mapBox.x+mapBox.width)
+    expect(tipBox.y+tipBox.height).toBeLessThanOrEqual(mapBox.y+mapBox.height)
+  }
+})
+
+test('statistics retry shows loading and recovers with matching map totals', async ({page}) => {
+  let attempts=0
+  let resume: () => void = () => {}
+  const pending = new Promise<void>(resolve => {resume=resolve})
+  await page.route('**/api/visits',async route => {
+    attempts++
+    if (attempts===1) {await route.fulfill({status:503});return}
+    await pending
+    await route.fulfill({json:stats})
+  })
+  await page.goto('/')
+  await page.getByRole('button',{name:'Agora não',exact:true}).click()
+  const section=page.locator('.portfolio-stats')
+  await section.getByRole('button',{name:'Tentar novamente',exact:true}).click()
+  await expect(section.locator('.portfolio-stats-content')).toHaveAttribute('aria-busy','true')
+  await expect(section.locator('.portfolio-stats-unavailable')).toHaveText('Consultando estatísticas…')
+  resume()
+  await expect(section.locator('.portfolio-stats-content')).toHaveAttribute('aria-busy','false')
+  await expect(section.locator('[data-country="BR"]')).toBeVisible()
+  await expect(section.locator('.visitor-detail')).toContainText('100 visualizações · 2 países identificados')
+  await expect(section.locator('.visitor-sidebar')).toContainText('Localização não identificada: 10')
+})

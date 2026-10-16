@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ArrowDown, ArrowRight, ArrowUpRight, Braces, BriefcaseBusiness, Check, ChevronUp, Code2, Database, FileDown, Github, GraduationCap, Instagram, Linkedin, Mail, MapPin, Menu, MessageCircle, Network, Terminal, Workflow, X } from 'lucide-react'
 import { projects, siteConfig, skills, technicalEducation } from './data/portfolio'
 import { caseStudyHref } from './data/caseStudies'
+import seoRoutes from './data/seoRoutes.json'
 import FlowDiagram from './components/FlowDiagram'
 import ProjectVisual from './components/ProjectVisual'
 import PixelAvatar from './components/PixelAvatar'
@@ -16,7 +17,7 @@ const loadCaseStudyPage = () => import('./components/CaseStudyPage')
 const CaseStudyPage = lazy(loadCaseStudyPage)
 const AutomationDemo = lazy(() => import('./components/AutomationDemo'))
 const BernoulliLab = lazy(() => import('./components/BernoulliLab'))
-const DeferredSection = ({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) => <Suspense fallback={fallback ?? <div className="deferred-section" aria-hidden="true" />}>{children}</Suspense>
+const DeferredSection = ({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) => <Suspense fallback={fallback ?? <div className="deferred-section" data-route-pending aria-hidden="true" />}>{children}</Suspense>
 const RouteLoading = () => <div className="route-loading" role="status" aria-live="polite"><span />Carregando página…</div>
 
 const navigation = [{ id: 'inicio', label: 'Início' }, { id: 'sobre', label: 'Sobre' }, { id: 'projetos', label: 'Projetos' }, { id: 'demonstracao', label: 'Laboratório' }, { id: 'competencias', label: 'Competências' }, { id: 'contato', label: 'Contato' }]
@@ -28,44 +29,69 @@ function Reveal({ children, className = '' }: { children: ReactNode; className?:
   return <motion.div className={className} initial={{ opacity: 0, y: reduced ? 0 : 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .08 }} transition={{ duration: reduced ? 0 : .5 }}>{children}</motion.div>
 }
 
-type Route = { pathname: string; section?: string; normalizeHash?: boolean; scrollY: number; source: 'initial' | 'push' | 'pop' }
+type Route = { pathname: string; section?: string; scrollY: number; source: 'initial' | 'push' | 'pop' }
 
 const getRoute = (source: Route['source'] = 'initial'): Route => {
+  if (window.location.hash.startsWith('#/')) {
+    const legacy = new URL(window.location.hash.slice(1), window.location.origin)
+    if (isPortfolioRoute(legacy.pathname)) history.replaceState(history.state, '', `${legacy.pathname}${legacy.search}${legacy.hash}`)
+  }
   const section = window.location.hash.replace(/^#/, '') || undefined
-  return { pathname: window.location.pathname, section, normalizeHash: Boolean(section), scrollY: history.state?.portfolioScrollY ?? 0, source }
+  return { pathname: window.location.pathname.replace(/\/$/, '') || '/', section, scrollY: history.state?.portfolioScrollY ?? 0, source }
 }
-const isPortfolioRoute = (pathname: string) => pathname === '/' || pathname === '/recrutador' || /^\/projetos\/[^/]+\/?$/.test(pathname)
+const isPortfolioRoute = (pathname: string) => pathname === '/' || /^\/recrutador\/?$/.test(pathname) || /^\/projetos\/[^/]+\/?$/.test(pathname)
 
 function PageTransition({ pathname, children }: { pathname: string; children: ReactNode }) {
   const reduced = useReducedMotion()
   const transition = { duration: reduced ? 0 : .2, ease: 'easeOut' as const }
-  return <AnimatePresence mode="wait" initial={false}><motion.div key={pathname} className="page-transition" initial={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 8 }} transition={transition}>{children}</motion.div></AnimatePresence>
+  // Mount the destination immediately so focus and scroll never target the outgoing page.
+  return <motion.div key={pathname} className="page-transition" initial={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} transition={transition}>{children}</motion.div>
 }
 
 function AppShell({ route, navigate, navigateToSection, children }: { route: Route; navigate: (url: URL) => void; navigateToSection: (section: string) => void; children: ReactNode }) {
   const shell = useRef<HTMLDivElement>(null)
+  const reduced = useReducedMotion()
   useEffect(() => {
     let observer: MutationObserver | undefined
-    const scrollToSection = () => {
+    const restorePosition = () => {
+      const main = shell.current?.querySelector<HTMLElement>('main')
+      if (!main) return false
+      // Lazy sections above an anchor change its position as they mount. Restore
+      // only once that content exists, including when returning via history.
+      if (main.querySelector('[data-route-pending]')) return false
       const target = route.section ? document.getElementById(route.section) : null
-      if (!target) return false
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      if (route.normalizeHash) history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', route.pathname)
-      target === document.getElementById('conteudo') ? target.focus({ preventScroll: true }) : document.getElementById('conteudo')?.focus({ preventScroll: true })
+      if (route.source === 'pop' || (route.source === 'initial' && !target)) window.scrollTo({ top: route.scrollY, behavior: 'instant' })
+      else if (target) target.scrollIntoView({ behavior: reduced || route.source === 'initial' ? 'instant' : 'smooth', block: 'start' })
+      else window.scrollTo({ top: 0, behavior: 'instant' })
+      const focusTarget = target ?? main
+      if (!focusTarget.hasAttribute('tabindex')) focusTarget.setAttribute('tabindex', '-1')
+      focusTarget.focus({ preventScroll: true })
       return true
     }
     const frame = requestAnimationFrame(() => {
-      if (route.source === 'pop') window.scrollTo({ top: route.scrollY, behavior: 'auto' })
-      else if (route.section && !scrollToSection()) {
-        observer = new MutationObserver(() => { if (scrollToSection()) observer?.disconnect() })
+      if (!restorePosition()) {
+        observer = new MutationObserver(() => { if (restorePosition()) observer?.disconnect() })
         if (shell.current) observer.observe(shell.current, { childList: true, subtree: true })
-      } else if (!route.section) {
-        window.scrollTo({ top: 0, behavior: 'auto' })
-        document.getElementById('conteudo')?.focus({ preventScroll: true })
       }
     })
     return () => { cancelAnimationFrame(frame); observer?.disconnect() }
-  }, [route])
+  }, [route, reduced])
+
+  useEffect(() => {
+    const path = route.pathname.replace(/^\//, '')
+    const seo = seoRoutes.find(item => item.path === path)
+    const title = seo?.title ?? 'Página não encontrada | Pedro Paulo'
+    const description = seo?.description ?? 'A página solicitada não está disponível. Explore os projetos e o perfil profissional de Pedro Paulo.'
+    document.title = title
+    const values: Record<string, string> = { description, 'og:title': title, 'twitter:title': title, 'og:description': description, 'twitter:description': description, 'og:url': `${siteConfig.siteUrl}${route.pathname === '/' ? '' : route.pathname}` }
+    for (const [name, content] of Object.entries(values)) {
+      const attribute = name.startsWith('og:') ? 'property' : 'name'
+      let meta = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${name}"]`)
+      if (!meta) { meta = document.createElement('meta'); meta.setAttribute(attribute, name); document.head.append(meta) }
+      meta.content = content
+    }
+    document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute('href', values['og:url'])
+  }, [route.pathname])
 
   const handleInternalLink = (event: ReactMouseEvent<HTMLDivElement>) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
@@ -74,12 +100,12 @@ function AppShell({ route, navigate, navigateToSection, children }: { route: Rou
     const url = new URL(anchor.href, window.location.href)
     if (url.origin !== window.location.origin || !isPortfolioRoute(url.pathname)) return
     event.preventDefault()
-    const section = anchor.dataset.section ?? url.hash.replace(/^#/, '')
+    const section = anchor.dataset.section ?? (url.pathname === '/' ? url.hash.replace(/^#/, '') : '')
     if (section) { navigateToSection(section); return }
     navigate(url)
   }
 
-  return <div className="app-shell" ref={shell} onClickCapture={handleInternalLink}><a className="skip-link" href="/" data-section="conteudo">Pular para o conteúdo</a><Header pathname={route.pathname} /><PageTransition pathname={route.pathname}>{children}</PageTransition></div>
+  return <div className="app-shell" ref={shell} onClickCapture={handleInternalLink}><a className="skip-link" href={`${route.pathname}#conteudo`}>Pular para o conteúdo</a><Header pathname={route.pathname} /><PageTransition pathname={route.pathname}>{children}</PageTransition></div>
 }
 
 function Header({ pathname }: { pathname: string }) {
@@ -87,6 +113,7 @@ function Header({ pathname }: { pathname: string }) {
   const [active, setActive] = useState('inicio')
   const toggle = useRef<HTMLButtonElement>(null)
   const header = useRef<HTMLElement>(null)
+  useEffect(() => { setOpen(false) }, [pathname])
   useEffect(() => {
     let frame = 0
     const update = () => {
@@ -115,7 +142,7 @@ function Header({ pathname }: { pathname: string }) {
   }, [open])
   return <header className="site-header" ref={header}><div className="container header-inner"><a className="brand" href="/" aria-label="Pedro Paulo, início" onClick={() => setOpen(false)}><span className="brand-symbol">p<span>p</span><i /></span><span>Pedro Paulo<span className="brand-dot">.</span></span></a>
     <button className="mobile-toggle icon-button" ref={toggle} aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="main-navigation" onClick={() => setOpen(!open)}>{open ? <X size={23} /> : <Menu size={23} />}</button>
-    <nav id="main-navigation" className={open ? 'nav-open' : ''} aria-label="Navegação principal">{navigation.map(item => <a key={item.id} href="/" data-section={item.id} className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'location' : undefined} onClick={() => setOpen(false)}>{item.label}{item.id === 'contato' && <ArrowUpRight size={14} />}</a>)}</nav>
+    <nav id="main-navigation" className={open ? 'nav-open' : ''} aria-label="Navegação principal">{navigation.map(item => <a key={item.id} href={`/#${item.id}`} className={pathname === '/' && active === item.id ? 'active' : ''} aria-current={pathname === '/' && active === item.id ? 'location' : undefined} onClick={() => setOpen(false)}>{item.label}{item.id === 'contato' && <ArrowUpRight size={14} />}</a>)}</nav>
   </div></header>
 }
 
@@ -141,32 +168,28 @@ export default function App() {
   const shownProjects = projects.filter(item => filter === 'Todos' || (item.categories ?? [item.category]).includes(filter))
   const headlineWords = siteConfig.headline.replace(/\.$/, '').split(' ')
   const navigate = (url: URL) => {
-    const nextPath = url.pathname
-    const currentPath = window.location.pathname
-    if (nextPath === currentPath) {
-      if (!url.hash) window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
-    }
-    history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', `${window.location.pathname}${window.location.hash}`)
-    history.pushState({ portfolioScrollY: 0 }, '', nextPath)
-    setRoute({ pathname: url.pathname, scrollY: 0, source: 'push' })
+    history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '')
+    const destination = `${url.pathname}${url.search}${url.hash}`
+    if (destination !== `${window.location.pathname}${window.location.search}${window.location.hash}`) history.pushState({ portfolioScrollY: 0 }, '', destination)
+    setRoute({ ...getRoute('push'), scrollY: 0 })
   }
   const navigateToSection = (section: string) => {
-    if (route.pathname === '/') {
-      setRoute({ pathname: '/', section, scrollY: window.scrollY, source: 'push' })
-      return
-    }
-    history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', window.location.pathname)
-    history.pushState({ portfolioScrollY: 0 }, '', '/')
-    setRoute({ pathname: '/', section, scrollY: 0, source: 'push' })
+    navigate(new URL(`/#${section}`, window.location.origin))
   }
   useEffect(() => {
-    if (history.state?.portfolioScrollY === undefined) history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '', `${window.location.pathname}${window.location.hash}`)
-    const onPopState = () => setRoute(getRoute('pop'))
-    const onHashChange = () => setRoute(getRoute('push'))
+    const previousRestoration = history.scrollRestoration
+    history.scrollRestoration = 'manual'
+    if (history.state?.portfolioScrollY === undefined) history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '')
+    let frame = 0
+    const savePosition = () => { frame = 0; history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '') }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(savePosition) }
+    const onPopState = () => { cancelAnimationFrame(frame); frame = 0; setRoute(getRoute(typeof history.state?.portfolioScrollY === 'number' ? 'pop' : 'push')) }
+    // Native hash changes are also handled, including links opened in another tab.
+    const onHashChange = () => { if (!history.state) setRoute(getRoute('push')) }
     window.addEventListener('popstate', onPopState)
     window.addEventListener('hashchange', onHashChange)
-    return () => { window.removeEventListener('popstate', onPopState); window.removeEventListener('hashchange', onHashChange) }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { history.scrollRestoration = previousRestoration; cancelAnimationFrame(frame); window.removeEventListener('popstate', onPopState); window.removeEventListener('hashchange', onHashChange); window.removeEventListener('scroll', onScroll) }
   }, [])
   useEffect(() => {
     if (reduced || !window.matchMedia('(min-width: 900px)').matches) return
@@ -179,6 +202,7 @@ export default function App() {
   const caseStudyId = route.pathname.match(/^\/projetos\/([^/]+)\/?$/)?.[1]
   if (route.pathname === '/recrutador') return <AppShell route={route} navigate={navigate} navigateToSection={navigateToSection}><RecruiterPage /></AppShell>
   if (caseStudyId) return <AppShell route={route} navigate={navigate} navigateToSection={navigateToSection}><DeferredSection fallback={<RouteLoading />}><CaseStudyPage projectId={caseStudyId} /></DeferredSection><footer className="site-footer"><div className="container"><a className="footer-name" href="/">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p></div></footer></AppShell>
+  if (route.pathname !== '/') return <AppShell route={route} navigate={navigate} navigateToSection={navigateToSection}><main id="conteudo" tabIndex={-1} className="case-not-found container"><h1>Página não encontrada.</h1><p>Este endereço não corresponde a uma página do portfólio.</p><a className="button button-primary" href="/">Voltar ao portfólio</a></main></AppShell>
   return <AppShell route={route} navigate={navigate} navigateToSection={navigateToSection}><main id="conteudo" tabIndex={-1}>
     <section id="inicio" className="hero" ref={hero}><div className="hero-decoration" aria-hidden="true" /><div className="container hero-grid"><div className="hero-copy">
       <motion.div {...entrance(.05)} className="hero-availability"><span className="status-dot" /> TECNOLOGIA COM PROPÓSITO <span className="availability-line" /></motion.div>
@@ -186,7 +210,7 @@ export default function App() {
       <motion.h1 {...entrance(.2)}>{headlineWords.slice(0, -2).join(' ')} <span>{headlineWords.slice(-2).join(' ')}<span className="title-dot">.</span></span></motion.h1>
       <motion.p {...entrance(.24)} className="hero-description"><strong>{siteConfig.introduction}</strong></motion.p>
       <motion.p {...entrance(.28)} className="hero-description">{siteConfig.description}</motion.p>
-      <motion.div {...entrance(.36)} className="hero-buttons"><a href="/" data-section="projetos" className="button button-primary">Conheça meus projetos <ArrowUpRight size={18} /></a><a href="/" data-section="contato" className="button button-quiet">Vamos conversar <ArrowRight size={17} /></a></motion.div>
+      <motion.div {...entrance(.36)} className="hero-buttons"><a href="/#projetos" className="button button-primary">Conheça meus projetos <ArrowUpRight size={18} /></a><a href="/#contato" className="button button-quiet">Vamos conversar <ArrowRight size={17} /></a></motion.div>
       <motion.a
         {...entrance(.4)}
         className="recruiter-highlight"
@@ -203,7 +227,7 @@ export default function App() {
       </motion.a>
       <motion.div {...entrance(.43)} className="hero-location"><MapPin size={14} /><span>{siteConfig.location}</span><i /><span>Conectando tecnologia e processos</span></motion.div>
     </div><motion.div {...entrance(.3)} className="hero-diagram"><div className="diagram-overline"><span className="mono">01 / A LÓGICA POR TRÁS</span><span className="little-cross">+</span></div><FlowDiagram /><div className="diagram-under"><span className="mono"><span className="code-brace">{'{ }'}</span> Menos tarefas repetitivas. Mais possibilidades.</span></div></motion.div></div>
-      <div className="container hero-bottom"><a href="/" data-section="sobre"><ArrowDown size={16} /> Explore as conexões</a><span className="mono">PESSOAS. PROCESSOS. TECNOLOGIA.</span></div>
+      <div className="container hero-bottom"><a href="/#sobre"><ArrowDown size={16} /> Explore as conexões</a><span className="mono">PESSOAS. PROCESSOS. TECNOLOGIA.</span></div>
     </section>
     <div className="expertise-strip"><div className="container">{[{ icon: Workflow, text: 'Automação de processos' }, { icon: Braces, text: 'Integração de sistemas' }, { icon: Network, text: 'CRM & jornada do cliente' }, { icon: Code2, text: 'Soluções web' }].map(item => <span key={item.text}><item.icon size={19} />{item.text}</span>)}</div></div>
     <section id="sobre" className="section container">
@@ -246,6 +270,6 @@ export default function App() {
     <DeferredSection><AutomationDemo /></DeferredSection>
     <DeferredSection><BernoulliLab /></DeferredSection>
     <section id="competencias" className="section skills-section"><div className="container"><Reveal><div className="section-heading"><div><p className="eyebrow"><span>04</span> COMPETÊNCIAS</p><h2 className="section-title">As ferramentas mudam.<br />O foco é <span>resolver.</span></h2></div><p className="section-description">Tecnologias organizadas pelo que permitem construir, conectar e melhorar.</p></div><div className="skills-list">{skills.map((skill, i) => { const Icon = skillIcons[i]; return <div className="skill-row" key={skill.title}><span className="skill-index mono">0{i + 1}</span><div className="skill-title"><Icon size={22} /><div><h3>{skill.title}</h3><p>{skill.description}</p></div></div><div className="skill-tags">{skill.items.map(item => <span key={item}>{item}</span>)}</div></div> })}</div></Reveal></div></section>
-    <section id="contato" className="section container contact-section"><Reveal><div className="contact-top"><p className="eyebrow"><span>05</span> PRÓXIMA CONEXÃO</p><span className="contact-location"><MapPin size={14} /> Teresina — PI</span></div><div className="contact-content"><div><h2>Vamos conectar tecnologia à sua <span>próxima solução?</span></h2><p>Estou aberto a oportunidades em automação, integrações, desenvolvimento e melhoria de processos.</p><ContactLinks /></div><div className="contact-art" aria-hidden="true"><div className="contact-orbit" /><span className="contact-icon"><ArrowUpRight size={59} strokeWidth={1.3} /></span><span className="orbit-point" /><span className="contact-art-label mono">a próxima conexão<br />começa com uma conversa.</span></div></div><div className="contact-bottom"><span><Check size={15} /> Processos mais claros. Sistemas mais conectados.</span><a href="/">Voltar ao início <ChevronUp size={16} /></a></div></Reveal></section>
+    <section id="contato" className="section container contact-section"><Reveal><div className="contact-top"><p className="eyebrow"><span>05</span> PRÓXIMA CONEXÃO</p><span className="contact-location"><MapPin size={14} /> Teresina — PI</span></div><div className="contact-content"><div><h2>Vamos conectar tecnologia à sua <span>próxima solução?</span></h2><p>Estou aberto a oportunidades em automação, integrações, desenvolvimento e melhoria de processos.</p><ContactLinks /></div><div className="contact-art" aria-hidden="true"><div className="contact-orbit" /><span className="contact-icon"><ArrowUpRight size={59} strokeWidth={1.3} /></span><span className="orbit-point" /><span className="contact-art-label mono">a próxima conexão<br />começa com uma conversa.</span></div></div><div className="contact-bottom"><span><Check size={15} /> Processos mais claros. Sistemas mais conectados.</span><a href="/#inicio">Voltar ao início <ChevronUp size={16} /></a></div></Reveal></section>
   </main><footer className="site-footer"><PortfolioStats /><div className="container"><a className="footer-name" href="/">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p><span className="mono">Feito com intenção e código.</span></div><VisitPrivacy /></footer><WelcomeToast /></AppShell>
 }

@@ -19,7 +19,7 @@ function Architecture({
   items: { label: string; detail: string }[];
 }) {
   return (
-    <div className="case-architecture" aria-label="Arquitetura do projeto">
+    <div className="case-architecture" role="region" tabIndex={0} aria-label="Arquitetura do projeto — use as setas para explorar">
       {items.map((item, index) => (
         <div className="case-architecture-item" key={item.label}>
           <span className="mono">0{index + 1}</span>
@@ -42,17 +42,19 @@ function Architecture({
 function ProjectCase({ project }: { project: Project }) {
   const reduced = useReducedMotion();
   const detail = caseStudies[project.id];
+  const planned = project.status === "Em planejamento";
+  const expected = planned || Boolean(project.expectedBenefits);
   const intro = {
-    initial: { opacity: 0, y: reduced ? 0 : 18 },
+    initial: { opacity: reduced ? 1 : 0, y: reduced ? 0 : 18 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: reduced ? 0 : 0.45 },
   };
   return (
-    <main id="conteudo" className="case-page">
+    <main id="conteudo" className="case-page" tabIndex={-1}>
       <section className="case-hero">
         <div className="container">
           <motion.div {...intro}>
-            <a className="case-back" href="/" data-section="projetos">
+            <a className="case-back" href="/#projetos" data-section="projetos">
               <ArrowLeft size={17} />
               Voltar aos projetos
             </a>
@@ -61,6 +63,9 @@ function ProjectCase({ project }: { project: Project }) {
             </p>
             <h1>{project.title}</h1>
             <p className="case-lead">{project.shortTitle}</p>
+            <span className={`project-status ${planned ? "planned" : project.status === "Em desenvolvimento e homologação" ? "development" : ""}`}>
+              <i aria-hidden="true" />{project.status}
+            </span>
             <div className="case-tech-summary">
               {project.technologies.map((tech) => (
                 <span key={tech}>{tech}</span>
@@ -77,6 +82,18 @@ function ProjectCase({ project }: { project: Project }) {
           </h2>
         </div>
         <p className="case-body-copy">{project.context}</p>
+        {project.validation && (
+          <div className={`case-validation${project.status === "Em aplicação" ? " case-validation-applied" : ""}`}>
+            <h3>Estágio do projeto</h3>
+            <p className="case-body-copy">{project.validation.note}</p>
+            {project.validation.confirmedStages.length > 0 && (
+              <>
+                <h4>Etapas com implementação e validação confirmadas</h4>
+                <ul>{project.validation.confirmedStages.map((stage) => <li key={stage}>{stage}</li>)}</ul>
+              </>
+            )}
+          </div>
+        )}
       </section>
       <section className="case-section case-split container">
         <div>
@@ -84,10 +101,33 @@ function ProjectCase({ project }: { project: Project }) {
           <h2>{project.problem}</h2>
         </div>
         <div>
-          <span className="mono">03 / A SOLUÇÃO</span>
+          <span className="mono">03 / {planned ? "SOLUÇÃO PROPOSTA" : "A SOLUÇÃO"}</span>
           <p className="case-body-copy">{project.solution}</p>
+          {project.contribution && (
+            <div className="case-contribution">
+              <h3>Minha atuação</h3>
+              <p className="case-body-copy">{project.contribution}</p>
+            </div>
+          )}
         </div>
       </section>
+      {(project.highlights || project.scope) && (
+        <section className="case-section container" aria-label="Detalhes da implementação">
+          {project.highlights && (
+            <div className="case-highlights">
+              {project.highlights.map((item) => (
+                <div key={item.title}><h3>{item.title}</h3><p className="case-body-copy">{item.description}</p></div>
+              ))}
+            </div>
+          )}
+          {project.scope && (
+            <div className="case-scope">
+              <h2>Funcionalidades contempladas no escopo</h2>
+              <ul>{project.scope.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          )}
+        </section>
+      )}
       {detail && (
         <section className="case-section case-architecture-section">
           <div className="container">
@@ -98,6 +138,7 @@ function ProjectCase({ project }: { project: Project }) {
               </h2>
             </div>
             <Architecture items={detail.architecture} />
+            <p className="case-architecture-hint">Deslize para os lados ou use as setas para explorar a arquitetura.</p>
             {detail.notes?.map((note) => (
               <p className="case-note" key={note}>
                 {note}
@@ -127,9 +168,9 @@ function ProjectCase({ project }: { project: Project }) {
       </section>
       <section className="case-section container case-results">
         <div>
-          <span className="mono">06 / RESULTADOS</span>
+          <span className="mono">06 / {expected ? "BENEFÍCIOS ESPERADOS" : "BENEFÍCIOS"}</span>
           <h2>
-            Benefícios para a <span>operação.</span>
+            {expected ? "Benefícios esperados para a " : "Benefícios para a "}<span>operação.</span>
           </h2>
         </div>
         <div>
@@ -150,7 +191,7 @@ function ProjectCase({ project }: { project: Project }) {
         <div className="case-section-heading">
           <span className="mono">07 / TECNOLOGIAS</span>
           <h2>
-            Base técnica <span>utilizada.</span>
+            Base técnica <span>{planned ? "proposta." : "utilizada."}</span>
           </h2>
         </div>
         <div className="case-tech-grid">
@@ -167,7 +208,7 @@ function ProjectCase({ project }: { project: Project }) {
         <div className="case-section-heading">
           <span className="mono">08 / DEMONSTRAÇÃO</span>
           <h2>
-            Explore uma <span>simulação.</span>
+            {detail?.demonstration ? <>Explore uma <span>simulação.</span></> : <>Disponibilidade da <span>demonstração.</span></>}
           </h2>
         </div>
         {detail?.demonstration === "experience" ? (
@@ -193,7 +234,7 @@ function ProjectCase({ project }: { project: Project }) {
         <p>
           Quer conversar sobre automação, integrações ou uma solução parecida?
         </p>
-        <a href="/" data-section="contato">
+        <a href="/#contato" data-section="contato">
           Entrar em contato <ArrowRight size={17} />
         </a>
       </section>
@@ -205,9 +246,9 @@ export default function CaseStudyPage({ projectId }: { projectId: string }) {
   const project = projects.find((item) => item.id === projectId);
   if (!project || !caseStudies[project.id])
     return (
-      <main id="conteudo" className="case-not-found container">
+      <main id="conteudo" className="case-not-found container" tabIndex={-1}>
         <h1>Estudo de caso não encontrado.</h1>
-        <a href="/" data-section="projetos">Voltar aos projetos</a>
+        <a href="/#projetos" data-section="projetos">Voltar aos projetos</a>
       </main>
     );
   return <ProjectCase project={project} />;

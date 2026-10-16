@@ -241,7 +241,7 @@ svg { flex-shrink:0; }
 .dialog-badges { display:flex; align-items:center; flex-wrap:wrap; gap:9px; }
 .case-highlights { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px; }
 .case-highlights > div { padding:16px; border:1px solid #344b56; border-radius:6px; background:#17252e; }
-.case-highlights h4 { font:500 12px 'Space Grotesk',sans-serif; color:#abd6d6; margin:0 0 8px; }
+.case-highlights h3,.case-highlights h4 { font:500 15px 'Space Grotesk',sans-serif; color:#abd6d6; margin:0 0 8px; }
 @media (max-width:1000px) { .project-card-featured { grid-template-columns:1fr 1fr; }.project-card-featured .project-card-body { padding:25px 24px 0; }.project-card-featured h3 { font-size:24px; }.visual-reading { padding-inline:16px; }.reading-architecture { gap:6px; font-size:8px; }.reading-architecture > span { padding-inline:7px; }.reading-architecture > i { width:8px; }.reading-sheet { padding:12px; }.reading-connector { width:28px; }.reading-stages > div { padding:10px; gap:7px; }.reading-stages strong { font-size:9px; }.reading-stages small { font-size:6px; } }
 @media (max-width:760px) { .project-card-featured { grid-template-columns:1fr; }.project-card-featured .project-card-body { padding:27px 25px 0; }.project-card-featured h3 { font-size:25px; }.project-card-featured .visual-reading { min-height:355px; height:355px; border-right:0; border-bottom:1px solid #36505a; padding:42px 22px 32px; }.reading-architecture { gap:8px; font-size:9px; }.reading-sheet { padding:15px; }.reading-connector { width:36px; }.reading-stages > div { padding:10px 12px; }.reading-stages strong { font-size:10px; }.reading-stages small { font-size:7px; } }
 @media (max-width:400px) { .project-card-featured .project-card-body { padding-inline:21px; }.project-card-featured h3 { font-size:23px; }.project-card-featured .visual-reading { padding-inline:15px; }.reading-sheet { padding:12px; }.reading-connector { width:23px; }.reading-stages > div { padding:10px 8px; gap:7px; }.reading-stages strong { font-size:9px; }.reading-stages small { font-size:6px; }.reading-stages > div > svg { width:16px; }.reading-architecture { gap:6px; font-size:8px; }.reading-architecture > i { width:8px; }.case-highlights { grid-template-columns:1fr; } }
@@ -356,3 +356,22 @@ svg { flex-shrink:0; }
 .education .university-education strong { margin:0; line-height:1.6; }
 .education .university-education span { line-height:1.6; }
 
+
+/* Consistent reading and touch targets across the portfolio and case studies. */
+.hero-bottom > a,.contact-bottom > a,.footer-name,.case-back,.case-cta a,.recruiter-project-grid a,.recruiter-contact a { min-height:44px; display:inline-flex; align-items:center; }
+.project-filters button { min-height:44px; }
+.case-architecture-hint { margin-top:6px; color:#a4bbc5; font-size:12px; line-height:1.6; }
+.case-contribution { margin-top:24px; }
+.case-contribution h3 { color:#dcebea; font-size:18px; margin-bottom:10px; }
+.case-validation h3,.case-scope h2 { font-size:22px; line-height:1.35; margin-bottom:12px; }
+.case-validation h4 { font-size:14px; line-height:1.5; margin-top:14px; }
+.case-hero .project-status { margin-top:20px; }
+.recruiter-project-grid .project-status { align-self:flex-start; margin-bottom:14px; line-height:1.5; }
+@media(max-width:640px) {
+  .hero-bottom > a,.contact-bottom > a { font-size:11px; }
+  .hero-bottom { flex-wrap:wrap; gap:8px 16px; }
+  .hero-bottom > span { font-size:8px; letter-spacing:.7px; }
+  .case-body-copy { font-size:14px; }
+  .case-highlights { grid-template-columns:1fr; }
+  .case-hero .case-back { margin-bottom:28px; }
+}

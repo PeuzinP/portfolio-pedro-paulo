@@ -21,9 +21,9 @@ test.beforeEach(async ({ page }) => {
 })
 
 const intentions = [
-  { label: 'Matrícula', team: 'equipe de matrículas', topic: 'matrícula' },
-  { label: 'Financeiro', team: 'equipe financeira', topic: 'financeiro' },
-  { label: 'Suporte', team: 'equipe de suporte', topic: 'suporte' },
+  { label: 'Matrícula', team: 'Comercial', topic: 'matrícula' },
+  { label: 'Financeiro', team: 'Financeiro', topic: 'financeiro' },
+  { label: 'Suporte', team: 'Suporte', topic: 'suporte' },
 ] as const
 
 for (const hours of ['open', 'closed'] as const) {
@@ -41,7 +41,7 @@ for (const hours of ['open', 'closed'] as const) {
       await demo.getByRole('button', { name: 'Simular atendimento' }).click()
 
       const result = hours === 'open'
-        ? `Simulação concluída: contato encaminhado para a ${intention.team}.`
+        ? `Simulação concluída: encaminhamento para ${intention.team} realizado.`
         : `Simulação concluída: contato registrado para retorno sobre ${intention.topic}.`
       await expect(demo.getByRole('status')).toHaveText(result)
       await expect(demo.getByText('Concluído', { exact: true })).toBeVisible()
@@ -92,6 +92,7 @@ test('project filters show the correct projects and selected state', async ({ pa
 
 const projectTitles = [
   'Reading KeepEdu — processamento e gestão de avaliações',
+  'Automação de Avaliações de Experiência',
   'Automação de atendimento e qualificação de leads',
   'Gestão de solicitações de cancelamento',
   'Automação de acessos em plataforma educacional',
@@ -101,24 +102,25 @@ const projectTitles = [
 for (const title of projectTitles) {
   test(`project details support keyboard navigation: ${title}`, async ({ page }) => {
     const card = page.locator('#projetos').getByRole('article').filter({ has: page.getByRole('heading', { name: title, exact: true }) })
-    const opener = card.getByRole('button', { name: 'Explorar projeto' })
+    const opener = card.getByRole('link', { name: 'Ver estudo de caso' })
+    const destination = await opener.getAttribute('href')
     await opener.focus()
     await page.keyboard.press('Enter')
-    const dialog = page.getByRole('dialog', { name: title })
-    await expect(dialog).toBeVisible()
-    const close = dialog.getByRole('button', { name: 'Fechar detalhes do projeto' })
-    await expect(close).toBeFocused()
-    for (const heading of [/Contexto/, /Problema/, /Solução/, /Fluxo/, /Tecnologias e conceitos/, /Benefício operacional/]) {
-      await expect(dialog.getByRole('heading', { name: heading })).toBeVisible()
-    }
-    await expect(dialog.locator('.case-flow > li')).toHaveCount(5)
-    await page.keyboard.press('Tab')
-    await expect(dialog.getByRole('link', { name: 'Vamos conversar sobre soluções' })).toBeFocused()
-    await page.keyboard.press('Shift+Tab')
-    await expect(close).toBeFocused()
-    await page.keyboard.press('Escape')
-    await expect(dialog).toHaveCount(0)
-    await expect(opener).toBeFocused()
+    await expect(page).toHaveURL(new RegExp(`${destination}$`))
+    const details = page.getByRole('main')
+    await expect(details.getByRole('heading', { level: 1, name: title })).toBeVisible()
+    await expect(details.getByRole('heading', { name: /Contexto e propósito/ })).toBeVisible()
+    await expect(details.locator('.case-steps > li')).toHaveCount(title.includes('Experiência') ? 6 : 5)
+    await expect(details.locator('.project-status')).toBeVisible()
+    const architecture = details.getByRole('region', { name: /Arquitetura do projeto/ })
+    await architecture.focus()
+    await expect(architecture).toBeFocused()
+    const back = details.getByRole('link', { name: 'Voltar aos projetos' })
+    await expect(back).toHaveAttribute('href', '/#projetos')
+    await back.focus()
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/\/#projetos$/)
+    await expect(card).toBeVisible()
   })
 }
 
@@ -126,14 +128,15 @@ test('the educational orchestrator is clearly a plan rather than a delivered sys
   const title = 'Orquestrador de integrações educacionais'
   const card = page.locator('#projetos').getByRole('article').filter({ has: page.getByRole('heading', { name: title, exact: true }) })
   await expect(card.getByText('Em planejamento', { exact: true })).toBeVisible()
-  await card.getByRole('button', { name: 'Explorar projeto' }).click()
-  const dialog = page.getByRole('dialog', { name: title })
+  await card.getByRole('link', { name: 'Ver estudo de caso' }).click()
+  const dialog = page.getByRole('main')
   await expect(dialog.getByText('Em planejamento', { exact: true })).toBeVisible()
   await expect(dialog).toContainText('não representa um sistema entregue ou em produção')
-  await expect(dialog.getByRole('heading', { name: '03 / Solução proposta' })).toBeVisible()
-  await expect(dialog.getByRole('heading', { name: '06 / Benefício operacional esperado' })).toBeVisible()
+  await expect(dialog.getByText('03 / SOLUÇÃO PROPOSTA')).toBeVisible()
+  await expect(dialog.getByRole('heading', { name: 'Benefícios esperados para a operação.' })).toBeVisible()
+  await expect(dialog.getByRole('heading', { name: 'Base técnica proposta.' })).toBeVisible()
   for (const platform of ['TOTVS', 'Google', 'KeepEdu', 'Bernoulli', 'Rubeus']) {
-    await expect(dialog.locator('.tag-list').getByText(platform, { exact: true })).toBeVisible()
+    await expect(dialog.locator('.case-tech-summary').getByText(platform, { exact: true })).toBeVisible()
   }
 })
 
@@ -162,7 +165,7 @@ test('mobile navigation opens, closes, and follows section links with the keyboa
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
 })
 
-for (const width of [360, 390, 768, 1440]) {
+for (const width of [360, 390, 768, 1024, 1440]) {
   test(`the layout has no horizontal overflow at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     for (const id of ['inicio', 'sobre', 'projetos', 'demonstracao', 'competencias', 'contato']) {
@@ -175,9 +178,9 @@ for (const width of [360, 390, 768, 1440]) {
       expect(dimensions.document, `${id}: document overflow`).toBeLessThanOrEqual(dimensions.viewport + 1)
       expect(dimensions.body, `${id}: body overflow`).toBeLessThanOrEqual(dimensions.viewport + 1)
     }
-    const firstProject = page.locator('#projetos').getByRole('button', { name: 'Explorar projeto' }).first()
+    const firstProject = page.locator('#projetos').getByRole('link', { name: 'Ver estudo de caso' }).first()
     await firstProject.click()
-    const dialog = page.getByRole('dialog')
+    const dialog = page.getByRole('main')
     await expect(dialog).toBeVisible()
     expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth + 1), 'Project details should fit the viewport').toBe(true)
     const bounds = await dialog.boundingBox()
@@ -200,12 +203,18 @@ test('configured contact channels use the supplied details and empty channels st
     await expect(link).toBeVisible()
     await expect(link).toHaveAttribute('href', href)
   }
-  for (const name of ['GitHub', 'Currículo']) {
+  for (const name of ['GitHub']) {
     await expect(contact.getByRole('link', { name })).toHaveCount(0)
   }
+  const resume = contact.getByRole('link', { name: 'Currículo (abre em nova aba)' })
+  await expect(resume).toHaveAttribute('href', '/curriculo-pedro-paulo.pdf')
+  await expect(resume).toHaveAttribute('target', '_blank')
+  await expect(resume).toHaveAttribute('rel', 'noopener noreferrer')
+  expect(await resume.getAttribute('download')).toBeNull()
   await expect(page.locator('a[href=""], a[href="#"], a[href^="javascript:"]')).toHaveCount(0)
   await contact.getByRole('link', { name: 'Voltar ao início' }).click()
-  await expect(page).toHaveURL(/#inicio$/)
+  await expect(page).toHaveURL('http://127.0.0.1:5173/')
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
 })
 
 test('reduced motion stops automatic SVG movement while nodes remain operable', async ({ page }) => {
@@ -240,7 +249,7 @@ test('animated simulation locks its controls until the local flow finishes', asy
   await expect(demo.getByRole('button', { name: 'Simulando atendimento…' })).toBeDisabled()
   await expect(demo.getByRole('combobox', { name: 'Qual é a intenção?' })).toBeDisabled()
   await expect(demo.getByRole('radio', { name: /Fora do horário/ })).toBeDisabled()
-  await expect(demo.getByRole('status')).toHaveText('Simulação concluída: contato encaminhado para a equipe financeira.', { timeout: 7_000 })
+  await expect(demo.getByRole('status')).toHaveText('Simulação concluída: encaminhamento para Financeiro realizado.', { timeout: 7_000 })
   await expect(demo.getByRole('button', { name: 'Simular atendimento' })).toBeEnabled()
   await expect(demo.getByRole('combobox', { name: 'Qual é a intenção?' })).toBeEnabled()
   await expect(demo.getByRole('radio', { name: /Fora do horário/ })).toBeEnabled()

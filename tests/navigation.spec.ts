@@ -1,0 +1,90 @@
+import { expect, test } from '@playwright/test'
+import seoRoutes from '../src/data/seoRoutes.json' with { type: 'json' }
+
+test.use({ reducedMotion: 'reduce' })
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('pp:visits:consent:v1', JSON.stringify({ choice: 'declined', at: Date.now() })))
+  await page.route('**/api/visits', route => route.fulfill({ json: { available: false } }))
+})
+
+for (const route of seoRoutes) {
+  test(`direct navigation and reload preserve metadata: /${route.path}`, async ({ page }) => {
+    await page.goto(`/${route.path}`)
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page).toHaveTitle(route.title)
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', route.description)
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://pedropaulo-dev.vercel.app${route.path ? `/${route.path}` : ''}`)
+    await page.reload()
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page).toHaveTitle(route.title)
+    expect(new URL(page.url()).hash).toBe('')
+  })
+}
+
+test('home, recruiter and case study navigation updates metadata and returns to section anchors', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('link', { name: 'Conheça meu perfil em 60 segundos' }).click()
+  await expect(page).toHaveURL(/\/recrutador$/)
+  await expect(page).toHaveTitle(seoRoutes[1].title)
+  await expect(page.getByRole('main')).toBeFocused()
+  await page.locator('.recruiter-projects a').first().click()
+  await expect(page).toHaveURL(/\/projetos\/reading-keepedu$/)
+  await expect(page).toHaveTitle(seoRoutes[2].title)
+  await expect(page.getByRole('main')).toBeFocused()
+  await page.getByRole('link', { name: 'Voltar aos projetos' }).click()
+  await expect(page).toHaveURL(/\/#projetos$/)
+  await expect(page.locator('#projetos')).toBeFocused()
+  await expect.poll(() => page.locator('#projetos').evaluate(element => Math.round(element.getBoundingClientRect().top))).toBeGreaterThanOrEqual(0)
+  await expect.poll(() => page.locator('#projetos').evaluate(element => Math.round(element.getBoundingClientRect().top))).toBeLessThan(150)
+  await expect(page).toHaveTitle(seoRoutes[0].title)
+})
+
+test('back and forward restore reading position on case study and home', async ({ page }) => {
+  await page.goto('/#projetos')
+  await page.locator('#projetos .explore-project').first().click()
+  await expect(page.getByRole('main')).toBeFocused()
+  await page.evaluate(() => scrollTo({ top: 1050, behavior: 'instant' }))
+  await expect.poll(() => page.evaluate(() => history.state.portfolioScrollY)).toBe(1050)
+  await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('link', { name: 'Contato' }).click()
+  await expect(page).toHaveURL(/\/#contato$/)
+  await expect(page.locator('#contato')).toBeFocused()
+  const contactScroll = await page.evaluate(() => scrollY)
+  expect(contactScroll).toBeGreaterThan(2000)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/projetos\/reading-keepedu$/)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(1050)
+  await page.goForward()
+  await expect(page).toHaveURL(/\/#contato$/)
+  await expect.poll(() => page.evaluate(() => Math.abs(scrollY - contactScroll))).toBeLessThan(3)
+})
+
+test('direct anchors, legacy URLs and keyboard skip links land on their intended content', async ({ page }) => {
+  await page.goto('/#competencias')
+  await expect(page.locator('#competencias')).toBeFocused()
+  await expect.poll(() => page.locator('#competencias').evaluate(element => element.getBoundingClientRect().top)).toBeLessThan(150)
+  await page.goto('/#/recrutador')
+  await expect(page).toHaveURL(/\/recrutador$/)
+  await page.locator('.skip-link').focus()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/recrutador#conteudo$/)
+  await expect(page.getByRole('main')).toBeFocused()
+})
+
+test('mobile menu supports Escape and closes after cross-page anchor navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/recrutador')
+  const toggle = page.getByRole('button', { name: /^(Abrir|Fechar) menu$/ })
+  const navigation = page.getByRole('navigation', { name: 'Navegação principal' })
+  await toggle.click()
+  await expect(navigation).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(toggle).toBeFocused()
+  await expect(navigation).toBeHidden()
+  await toggle.click()
+  await navigation.getByRole('link', { name: 'Contato' }).click()
+  await expect(page).toHaveURL(/\/#contato$/)
+  await expect(navigation).toBeHidden()
+  await expect(page.locator('#contato')).toBeFocused()
+  await expect.poll(() => page.locator('#contato').evaluate(element => element.getBoundingClientRect().top)).toBeLessThan(150)
+})

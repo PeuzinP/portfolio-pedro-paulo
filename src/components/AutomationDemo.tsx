@@ -66,6 +66,15 @@ export default function AutomationDemo() {
 
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
 
+  useEffect(() => {
+    if (!reducedMotion || !running) return
+    timers.current.forEach(clearTimeout)
+    timers.current = []
+    setActiveIndex(steps.length - 1)
+    setComplete(true)
+    setRunning(false)
+  }, [reducedMotion, running, steps.length])
+
   const reset = () => {
     timers.current.forEach(clearTimeout)
     timers.current = []
@@ -107,7 +116,7 @@ export default function AutomationDemo() {
   const branchReached = activeIndex >= 3
   const statusText = complete
     ? businessHours === 'open'
-      ? `Simulação concluída: contato encaminhado para a ${team.toLocaleLowerCase('pt-BR')}.`
+      ? `Simulação concluída: encaminhamento para ${team} realizado.`
       : `Simulação concluída: contato registrado para retorno sobre ${intention.toLocaleLowerCase('pt-BR')}.`
     : running
       ? steps[activeIndex]?.message
@@ -217,7 +226,7 @@ export default function AutomationDemo() {
                 >{statusText}</motion.p>
               </AnimatePresence>
             </div>
-            {steps.length > 0 && <div className="ad-operation-log" aria-label="Logs da operação">{steps.slice(0, activeIndex + 1).map(step => <p key={step.id}><b>[{step.log.level}]</b> {step.log.message}</p>)}</div>}
+            {steps.length > 0 && <div className="ad-operation-log" role="region" tabIndex={0} aria-label="Logs da operação">{steps.slice(0, activeIndex + 1).map(step => <p key={step.id}><b>[{step.log.level}]</b> {step.log.message}</p>)}</div>}
           </div>
         </div>
       </div>

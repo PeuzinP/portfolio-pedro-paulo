@@ -104,3 +104,29 @@
 @media(max-width:760px){.bl-workbench{grid-template-columns:1fr}.bl-controls{border-right:0;border-bottom:1px solid #36515a}.bl-panel{padding:20px}.bl-node{flex-basis:120px}}
 @media(max-width:1100px){.bl-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;overflow:visible}.bl-node{min-width:0}.bl-node>svg{display:none}}
 @media(max-width:520px){.bl-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.bl-node{min-height:76px;padding:11px 9px}.bl-terminal{padding:14px}.bl-result{align-items:flex-start}}
+
+/* Keep the laboratories readable at narrow widths without shrinking their labels. */
+.ad-node-copy strong { font-size:12px; }
+.ad-node-copy>span { font-size:11px; overflow-wrap:anywhere; }
+.ad-branch-label { font-size:10px; white-space:normal; line-height:1.5; }
+.ad-branch-label>svg { flex-shrink:0; }
+.ad-status p,.ad-local-note,.bl-controls p { font-size:12px; }
+.ad-operation-log p,.bl-terminal p { font-size:11px; overflow-wrap:anywhere; }
+.bl-reset,.bl-controls a { min-height:44px; font-size:12px; }
+.bl-controls select { min-height:44px; }
+.bl-flow:focus-visible,.ad-operation-log:focus-visible { outline:2px solid var(--cyan); outline-offset:-2px; }
+.bl-result>svg { flex-shrink:0; }
+@media(max-width:760px) {
+  .ad-radio strong { font-size:12px; }
+  .ad-radio small { font-size:11px; }
+  .ad-radio-dot { display:none; }
+  .ad-common-path { grid-template-columns:1fr 15px 1fr 15px 1fr; }
+}
+@media(max-width:440px) {
+  .ad-fieldset { grid-template-columns:1fr; }
+  .ad-branch { padding:8px; }
+  .ad-branch .ad-node { min-height:124px; }
+  .ad-common-path .ad-node { padding-inline:4px; }
+  .ad-node-copy strong { font-size:11px; }
+  .ad-flow-toolbar { gap:6px; padding-block:10px; }
+}

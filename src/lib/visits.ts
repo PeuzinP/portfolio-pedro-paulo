@@ -75,6 +75,7 @@ function acceptStats(value: unknown) {
 
 export function refreshStats(): Promise<void> {
   if (statsTask) return statsTask
+  if (!state.stats) publish({ status: 'loading' })
   statsTask = (async () => {
     const abort = new AbortController()
     const timeout = setTimeout(() => abort.abort(), 6000)

@@ -35,10 +35,10 @@ export default function RecruiterPage() {
     },
   ].filter((item) => item.href);
   return (
-    <main id="conteudo" className="recruiter-page">
+    <main id="conteudo" className="recruiter-page" tabIndex={-1}>
       <section className="recruiter-hero">
         <div className="container">
-          <a className="case-back" href="/" data-section="inicio">
+          <a className="case-back" href="/#inicio" data-section="inicio">
             <ArrowLeft size={17} />
             Voltar ao portfólio
           </a>
@@ -56,13 +56,14 @@ export default function RecruiterPage() {
                 key={item.label}
                 href={item.href}
                 target={item.href.startsWith("https:") ? "_blank" : undefined}
-                rel="noreferrer"
+                rel={item.href.startsWith("https:") ? "noopener noreferrer" : undefined}
+                aria-label={item.href.startsWith("https:") ? `${item.label} (abre em nova aba)` : undefined}
               >
                 <item.icon size={17} />
                 {item.label}
               </a>
             ))}
-            <a className="button button-secondary" href="/" data-section="projetos">
+            <a className="button button-secondary" href="/#projetos" data-section="projetos">
               Explorar projetos <ArrowRight size={17} />
             </a>
           </div>
@@ -103,11 +104,14 @@ export default function RecruiterPage() {
                   <article key={project.id}>
                     <Sparkles size={18} />
                     <h2>{project.title}</h2>
+                    <span className={`project-status ${project.status === "Em planejamento" ? "planned" : project.status === "Em desenvolvimento e homologação" ? "development" : ""}`}>
+                      <i aria-hidden="true" />{project.status}
+                    </span>
                     <p>
                       <strong>Problema:</strong> {project.problem}
                     </p>
                     <p>
-                      <strong>Solução:</strong> {project.solution}
+                      <strong>Solução:</strong> {project.description}
                     </p>
                     <div className="tag-list">
                       {project.technologies.map((tech) => (

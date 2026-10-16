@@ -9,7 +9,7 @@
 .hd-period legend { color:#b3c0c9; font-size:11px; margin-bottom:9px; }
 .hd-period-options { display:flex; padding:3px; gap:4px; border-radius:7px; border:1px solid var(--line); background:#101920; }
 .hd-period-option { display:grid; place-items:center; position:relative; padding:0 20px; min-height:44px; min-width:88px; color:#aebbc5; border-radius:4px; font-size:12px; cursor:pointer; transition:background .2s,color .2s; }
-.hd-period-option input { position:absolute; width:1px; height:1px; opacity:0; }
+.hd-period-option input { position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; }
 .hd-period-option:has(input:focus-visible) { outline:2px solid var(--cyan); outline-offset:3px; }
 .hd-period-option--selected { color:var(--cyan); background:#1b333b; }
 .hd-period-option:hover { color:var(--text); }
@@ -99,3 +99,8 @@
   .hr-demo *, .hr-demo *::before, .hr-demo *::after { transition:none !important; animation:none !important; }
   .hd-node:hover,.hr-demo .button:hover { transform:none; }
 }
+.hd-node-copy strong { font-size:13px; }
+.hd-node-copy small,.hd-person small,.hd-states > li { font-size:11px; }
+.hd-panel-caption { font-size:10px; }
+.hr-demo .hd-role p,.hr-demo .hd-result p,.hr-demo .hd-disclaimer { font-size:12px; }
+.hd-record-fields dt,.hd-record-fields dd { font-size:12px; }

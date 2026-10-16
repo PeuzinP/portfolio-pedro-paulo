@@ -1,0 +1,42 @@
+[
+  {
+    "path": "",
+    "title": "Pedro Paulo | Automação, Integrações e Desenvolvimento",
+    "description": "Conheça os projetos de Pedro Paulo em automação de processos, integração de sistemas, APIs e desenvolvimento de soluções web."
+  },
+  {
+    "path": "recrutador",
+    "title": "Perfil profissional em 60 segundos | Pedro Paulo",
+    "description": "Resumo profissional de Pedro Paulo: automação, integrações, desenvolvimento web e projetos práticos."
+  },
+  {
+    "path": "projetos/reading-keepedu",
+    "title": "Reading KeepEdu | Processamento de avaliações",
+    "description": "Estudo de caso de processamento OMR, revisão por lote e integração com KeepEdu usando React, FastAPI e MySQL."
+  },
+  {
+    "path": "projetos/avaliacoes-experiencia",
+    "title": "Avaliações de Experiência | Automação de RH",
+    "description": "Estudo de caso de automação para controlar prazos, formulários, notificações e encaminhamentos de avaliações de experiência."
+  },
+  {
+    "path": "projetos/atendimento-leads",
+    "title": "Atendimento e Qualificação de Leads | Automação",
+    "description": "Estudo de caso de identificação de intenção, regras de horário, roteamento de contatos e integração com CRM."
+  },
+  {
+    "path": "projetos/solicitacoes-cancelamento",
+    "title": "Gestão de Solicitações de Cancelamento",
+    "description": "Estudo de caso de formulário web e automação para validar, registrar e acompanhar solicitações de cancelamento."
+  },
+  {
+    "path": "projetos/acessos-educacionais",
+    "title": "Automação de Acessos Educacionais | Bernoulli",
+    "description": "Estudo de caso de consulta, validação e desativação de acessos educacionais quando aplicável, com registro de status."
+  },
+  {
+    "path": "projetos/orquestrador-educacional",
+    "title": "Orquestrador de Integrações Educacionais | Planejamento",
+    "description": "Estudo de caso em planejamento para integrar TOTVS, Google, KeepEdu, Bernoulli e Rubeus com validações, filas e logs."
+  }
+]
