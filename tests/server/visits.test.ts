@@ -113,3 +113,21 @@ test('REST transport sends credentials only as server Authorization and handles 
   await assert.rejects(() => broken(['PING']), /Redis command failed/)
   await assert.rejects(() => visitOperation(async () => null, 'test', 0, 'network'), /Invalid Redis response/)
 })
+
+test('country aggregation uses trusted Vercel headers and keeps old views unknown', async () => {
+  let captured: (string | number)[] = []
+  const command = async (value: (string | number)[]) => { captured=value; return [1, 100, 45, ['BR', '60', 'US', '30']] }
+  const response = await handleVisits(request(payload(), { 'x-vercel-ip-country': 'BR' }), { ...dependencies, command })
+  const data=await response.json()
+  assert.deepEqual(data.countries, [{ code:'BR', views:60 }, { code:'US', views:30 }])
+  assert.equal(data.unknownViews,10)
+  assert.equal(captured.at(-1),'BR')
+  await handleVisits(request(payload(), { 'x-vercel-ip-country':'BR' }), { ...dependencies, env:{...env,VERCEL:'0'}, command })
+  assert.equal(captured.at(-1),'')
+  await handleVisits(request(payload(), { 'x-vercel-ip-country':'XX' }), { ...dependencies, command })
+  assert.equal(captured.at(-1),'')
+})
+test('inconsistent country snapshots are rejected',async()=>{
+ const response=await handleVisits(request(),{...dependencies,command:async()=>[1,10,5,['BR','11']]})
+ assert.equal(response.status,503)
+})

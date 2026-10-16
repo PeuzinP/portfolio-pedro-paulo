@@ -81,12 +81,15 @@ export async function handleVisits(request: Request, dependencies: Dependencies 
     // this rotating security key expires after 120s; raw addresses are not stored.
     const networkAddress = env.VERCEL === '1' ? request.headers.get('x-vercel-forwarded-for')?.split(',')[0].trim() || 'unknown' : 'local'
     const network = digest(`rate:${bucket}:${networkAddress}`)
-    const event = payload ? { id: digest(`event:${payload.eventId}`), visitor: digest(`visitor:${payload.visitorId}`) } : undefined
+    const countryHeader = env.VERCEL === '1' ? request.headers.get('x-vercel-ip-country') ?? '' : ''
+    const country = /^[A-Z]{2}$/.test(countryHeader) && !['XX', 'ZZ'].includes(countryHeader) ? countryHeader : ''
+    const event = payload ? { id: digest(`event:${payload.eventId}`), visitor: digest(`visitor:${payload.visitorId}`), country } : undefined
     const command = dependencies.command ?? createRedisCommand({ url: redisUrl, token, prefix })
     const result = await visitOperation(command, prefix, bucket, network, event)
     if (result.limited) return json({ available: false, reason: 'rate_limited' }, 429, { 'Retry-After': String(60 - Math.floor(now / 1000) % 60) })
     return json({ available: true, views: result.views, uniqueVisitors: result.uniqueVisitors, estimated: true,
-      consentOnly: true, updatedAt: new Date(now).toISOString(), ...(payload ? { recorded: result.recorded } : {}) })
+      consentOnly: true, period: 'all', countries: result.countries, unknownViews: result.unknownViews,
+      updatedAt: new Date(now).toISOString(), ...(payload ? { recorded: result.recorded } : {}) })
   } catch {
     // Do not log request bodies, tokens, identifiers, or upstream responses.
     return json({ available: false, reason: 'temporarily_unavailable' }, 503, { 'Retry-After': '30' })

@@ -130,7 +130,7 @@ function ContactLinks() {
     { label: 'WhatsApp', href: /^\+?[\d\s()-]{10,20}$/.test(c.whatsapp) ? `https://wa.me/${c.whatsapp.replace(/\D/g, '')}` : '', icon: MessageCircle },
     { label: 'Currículo', href: safeUrl(c.resume), icon: FileDown },
   ].filter(link => link.href)
-  return links.length ? <div className="contact-links">{links.map(link => <a key={link.label} className="button button-secondary" href={link.href} target={link.href.startsWith('https:') ? '_blank' : undefined} rel={link.href.startsWith('https:') ? 'noopener noreferrer' : undefined}><link.icon size={18} />{link.label}<ArrowUpRight size={16} /></a>)}</div> : <p className="contact-pending"><span className="status-dot" /> Canais de contato disponíveis em breve.</p>
+  return links.length ? <div className="contact-links">{links.map(link => <a key={link.label} className="button button-secondary" href={link.href} aria-label={link.href === c.resume ? `${link.label} (abre em nova aba)` : undefined} target={(link.href.startsWith('https:') || link.href === c.resume) ? '_blank' : undefined} rel={(link.href.startsWith('https:') || link.href === c.resume) ? 'noopener noreferrer' : undefined}><link.icon size={18} />{link.label}<ArrowUpRight size={16} /></a>)}</div> : <p className="contact-pending"><span className="status-dot" /> Canais de contato disponíveis em breve.</p>
 }
 
 export default function App() {

@@ -68,7 +68,8 @@ function probeStorage() {
 function acceptStats(value: unknown) {
   if (!isVisitStats(value)) return false
   // A slower GET must not roll back the fresher POST response.
-  publish({ stats: state.stats ? { ...value, views: Math.max(state.stats.views, value.views), uniqueVisitors: Math.max(state.stats.uniqueVisitors, value.uniqueVisitors) } : value, status: 'ready' })
+  if (state.stats && (value.views < state.stats.views || Date.parse(value.updatedAt) < Date.parse(state.stats.updatedAt))) return true
+  publish({ stats: value, status: 'ready' })
   return true
 }
 

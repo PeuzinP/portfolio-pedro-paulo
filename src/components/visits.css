@@ -59,3 +59,30 @@ body:has(.site-header .nav-open) .welcome-toast { visibility:hidden; }
 }
 @media(max-width:640px) { .welcome-toast { top:calc(82px + env(safe-area-inset-top,0px)); } }
 @media(prefers-reduced-motion:reduce) { .welcome-toast-progress { display:none; } .welcome-toast,.visit-consent { transition:none !important; } }
+.visitor-section { margin-top:32px; padding-top:28px; border-top:1px solid #243039; min-height:470px; }
+.site-footer .visitor-section h3 { font-family:'Space Grotesk',sans-serif; font-size:clamp(20px,3vw,28px); color:#dcebea; margin:0 0 10px; }
+.site-footer .visitor-section p { font-size:12px; line-height:1.7; color:#95a7b2; }
+.visitor-explorer { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:24px; margin-top:24px; }
+.visitor-map-column { min-width:0; }
+.visitor-map-stage { aspect-ratio:2; overflow:hidden; border:1px solid #30444d; border-radius:8px; background:#101920; display:grid; place-items:center; }
+.visitor-map-stage svg { width:100%; height:100%; display:block; }
+.visitor-map-stage path { cursor:pointer; }
+.visitor-section button { font:inherit; font-size:12px; color:#b9cdcf; background:#16232c; border:1px solid #40555f; border-radius:5px; min-height:44px; padding:8px 12px; cursor:pointer; }
+.visitor-section button:hover,.visitor-section button[aria-pressed='true'] { color:#b9ffff; border-color:#65d9d8; background:#20383d; }
+.visitor-section button:disabled { opacity:.4; cursor:default; }
+.visitor-section :focus-visible { outline:2px solid #b9ffff; outline-offset:3px; }
+.visitor-map-stage path:focus-visible { stroke:#fff; stroke-width:1; }
+.visitor-map-controls { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.visitor-tooltip { min-height:42px; }
+.visitor-legend { display:flex; align-items:center; gap:10px; font-size:10px; color:#95a7b2; }
+.visitor-legend i { width:100px; height:8px; background:linear-gradient(90deg,#34454e,hsl(179 60% 32%),hsl(179 60% 72%)); }
+.visitor-sidebar { min-width:0; }
+.site-footer .visitor-sidebar h4 { color:#dcebea; font-size:14px; margin:0 0 12px; }
+.visitor-detail { padding:16px; border:1px solid #30444d; border-radius:8px; margin-bottom:24px; }
+.visitor-ranking { padding:0; margin:0; list-style:none; max-height:290px; overflow:auto; }
+.visitor-ranking li { margin:6px 0; }
+.visitor-ranking button { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; text-align:left; }
+.visitor-placeholder { min-height:360px; display:grid; place-items:center; border:1px solid #30444d; border-radius:8px; }
+@media(max-width:767px) { .visitor-explorer { grid-template-columns:1fr; } .visitor-section { min-height:700px; } }
+@media(prefers-reduced-motion:reduce) { .visitor-section * { transition:none!important; animation:none!important; } }
+.visitor-map-stage path:focus-visible { outline:none; }
