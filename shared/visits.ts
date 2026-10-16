@@ -1,3 +1,5 @@
+import { BRAZIL_STATES } from './brazil-states.ts'
+
 export type VisitStats = {
   available: true
   views: number
@@ -8,6 +10,8 @@ export type VisitStats = {
   countries?: { code: string; views: number }[]
   unknownViews?: number
   period?: 'all'
+  brazilStates?: { code: string; views: number }[]
+  unknownBrazilStateViews?: number
 }
 
 export type VisitPayload = {
@@ -32,6 +36,19 @@ export function isVisitStats(value: unknown): value is VisitStats {
       known += row.views
     }
     if (known + data.unknownViews! !== data.views) return false
+  }
+  if (data.brazilStates !== undefined) {
+    if (!Array.isArray(data.brazilStates) || !data.countries
+      || !Number.isSafeInteger(data.unknownBrazilStateViews) || data.unknownBrazilStateViews! < 0) return false
+    const codes = new Set<string>()
+    let known = 0
+    for (const row of data.brazilStates) {
+      if (!row || !Object.hasOwn(BRAZIL_STATES, row.code) || codes.has(row.code)
+        || !Number.isSafeInteger(row.views) || row.views < 0) return false
+      codes.add(row.code)
+      known += row.views
+    }
+    if (known + data.unknownBrazilStateViews! !== (data.countries.find(row => row.code === 'BR')?.views ?? 0)) return false
   }
   return data.available === true && data.estimated === true && data.consentOnly === true
     && Number.isSafeInteger(data.views) && data.views! >= 0

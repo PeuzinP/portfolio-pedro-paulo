@@ -61,3 +61,57 @@ test('PDF opens in a new tab and preserves portfolio',async({page,context})=>{
  const original=page.url(); const popup=context.waitForEvent('page'); await link.click(); const pdf=await popup
  await pdf.waitForLoadState(); expect(pdf.url()).toContain('/curriculo-pedro-paulo.pdf'); expect(page.url()).toBe(original)
 })
+
+test('Brazil hover identifies the correct state and synchronizes real state totals, keyboard and selection', async ({page}) => {
+  let stateRequests=0
+  await page.route('**/geo/brazil-states.json',async route=>{stateRequests++;await route.continue()})
+  await setup(page,{...stats,brazilStates:[{code:'MG',views:20},{code:'SP',views:10}],unknownBrazilStateViews:30} as typeof stats)
+  expect(stateRequests).toBe(0)
+  await page.getByRole('button',{name:'Explorar estados do Brasil',exact:true}).click()
+  const mg=page.locator('[data-state="MG"]')
+  await expect(mg).toBeVisible()
+  expect(await page.locator('[data-state]').count()).toBe(27)
+  // Belo Horizonte: use the map's real projection, rather than a bounding box approximation.
+  const svg=page.locator('.visitor-map-stage svg')
+  await expect.poll(async()=>Number((await svg.getAttribute('viewBox'))?.split(' ')[2])).toBeLessThan(150)
+  await page.waitForTimeout(400)
+  const point=await svg.evaluate(element=>{const svg=element as SVGSVGElement;const matrix=svg.getScreenCTM()!;const point=new DOMPoint(180-43.94,90+19.92).matrixTransform(matrix);return{x:point.x,y:point.y}})
+  await page.mouse.move(point.x,point.y)
+  await expect(page.locator('.visitor-tooltip')).toContainText('Minas Gerais (MG) · Brasil · 20 visualizações · 33,3% dos acessos do Brasil')
+  await expect(page.locator('.visitor-state-tooltip')).toHaveText('Minas Gerais (MG)')
+  await page.locator('.visitor-map-column').screenshot({path:'artifacts/brazil-states-hover.png'})
+  await page.mouse.click(point.x,point.y)
+  await expect(mg).toHaveAttribute('aria-pressed','true')
+  await expect(page.locator('.visitor-detail h4')).toHaveText('Minas Gerais (MG)')
+  await expect(page.locator('.visitor-states-panel')).toContainText('Estado não identificado: 30')
+  await page.getByLabel('Explorar um estado',{exact:true}).selectOption('DF')
+  await expect(page.locator('.visitor-detail')).toContainText('Distrito Federal (DF)')
+  await page.getByRole('button',{name:'Ver todo o Brasil',exact:true}).click()
+  const sp=page.locator('[data-state="SP"]');await sp.focus();await page.keyboard.press('Enter')
+  await expect(sp).toHaveAttribute('aria-pressed','true')
+  await page.keyboard.press('Escape');await expect(page.locator('[data-state]')).toHaveCount(0)
+  await expect(svg).toHaveAttribute('viewBox','0 0 360 180')
+})
+
+test('states support mobile touch and old analytics without invented counts',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:375,height:812},hasTouch:true,isMobile:true,reducedMotion:'reduce'})
+ const page=await context.newPage();await setup(page)
+ await page.getByRole('button',{name:'Explorar estados do Brasil',exact:true}).tap()
+ const mg=page.locator('[data-state="MG"]');await expect(mg).toBeVisible()
+ await mg.tap()
+ await expect(page.locator('.visitor-detail h4')).toHaveText('Minas Gerais (MG)')
+ await expect(page.locator('.visitor-detail')).toContainText('Contagem por estado ainda indisponível')
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+ await context.close()
+})
+
+test('state geometry failure can retry without hiding the country map',async({page})=>{
+ let failed=true
+ await page.route('**/geo/brazil-states.json',async route=>{if(failed) await route.fulfill({status:503});else await route.continue()})
+ await setup(page)
+ await page.getByRole('button',{name:'Explorar estados do Brasil',exact:true}).click()
+ await expect(page.getByRole('alert')).toContainText('Não foi possível carregar os estados')
+ await expect(page.locator('[data-country="BR"]')).toBeVisible()
+ failed=false;await page.getByRole('alert').getByRole('button',{name:'Tentar novamente'}).click()
+ await expect(page.locator('[data-state]')).toHaveCount(27)
+})

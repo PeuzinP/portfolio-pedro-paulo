@@ -86,3 +86,9 @@ body:has(.site-header .nav-open) .welcome-toast { visibility:hidden; }
 @media(max-width:767px) { .visitor-explorer { grid-template-columns:1fr; } .visitor-section { min-height:700px; } }
 @media(prefers-reduced-motion:reduce) { .visitor-section * { transition:none!important; animation:none!important; } }
 .visitor-map-stage path:focus-visible { outline:none; }
+.visitor-map-stage { position:relative; }
+.visitor-state-tooltip { position:absolute; z-index:2; pointer-events:none; padding:8px 10px; border:1px solid #65d9d8; border-radius:5px; color:#e6ffff; background:#101920f5; font-size:12px; line-height:1.4; box-shadow:0 4px 18px #0004; max-width:70%; transform:translate(6px,8px); }
+.visitor-state:focus-visible + .visitor-state-border { stroke:#fff; stroke-width:2; }
+.visitor-states-panel { border-bottom:1px solid #30444d; padding-bottom:16px; margin-bottom:24px; }
+.visitor-states-panel label { display:block; margin-bottom:8px; font-size:12px; color:#b9cdcf; }
+.visitor-states-panel select { width:100%; min-height:44px; margin-bottom:8px; padding:8px; border:1px solid #40555f; border-radius:5px; color:#dcebea; background:#16232c; font:inherit; font-size:12px; }

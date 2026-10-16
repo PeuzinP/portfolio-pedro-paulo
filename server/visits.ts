@@ -1,5 +1,6 @@
 import { createHmac } from 'node:crypto'
 import { UUID_PATTERN } from '../shared/visits.ts'
+import { BRAZIL_STATES } from '../shared/brazil-states.ts'
 import type { VisitPayload } from '../shared/visits.ts'
 import { createRedisCommand, visitOperation } from './visits-store.ts'
 import type { RedisCommand } from './visits-store.ts'
@@ -83,12 +84,15 @@ export async function handleVisits(request: Request, dependencies: Dependencies 
     const network = digest(`rate:${bucket}:${networkAddress}`)
     const countryHeader = env.VERCEL === '1' ? request.headers.get('x-vercel-ip-country') ?? '' : ''
     const country = /^[A-Z]{2}$/.test(countryHeader) && !['XX', 'ZZ'].includes(countryHeader) ? countryHeader : ''
-    const event = payload ? { id: digest(`event:${payload.eventId}`), visitor: digest(`visitor:${payload.visitorId}`), country } : undefined
+    const stateHeader = country === 'BR' ? request.headers.get('x-vercel-ip-country-region') ?? '' : ''
+    const state = Object.hasOwn(BRAZIL_STATES, stateHeader) ? stateHeader : ''
+    const event = payload ? { id: digest(`event:${payload.eventId}`), visitor: digest(`visitor:${payload.visitorId}`), country, state } : undefined
     const command = dependencies.command ?? createRedisCommand({ url: redisUrl, token, prefix })
     const result = await visitOperation(command, prefix, bucket, network, event)
     if (result.limited) return json({ available: false, reason: 'rate_limited' }, 429, { 'Retry-After': String(60 - Math.floor(now / 1000) % 60) })
     return json({ available: true, views: result.views, uniqueVisitors: result.uniqueVisitors, estimated: true,
       consentOnly: true, period: 'all', countries: result.countries, unknownViews: result.unknownViews,
+      brazilStates: result.brazilStates, unknownBrazilStateViews: result.unknownBrazilStateViews,
       updatedAt: new Date(now).toISOString(), ...(payload ? { recorded: result.recorded } : {}) })
   } catch {
     // Do not log request bodies, tokens, identifiers, or upstream responses.

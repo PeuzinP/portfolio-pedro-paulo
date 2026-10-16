@@ -121,13 +121,44 @@ test('country aggregation uses trusted Vercel headers and keeps old views unknow
   const data=await response.json()
   assert.deepEqual(data.countries, [{ code:'BR', views:60 }, { code:'US', views:30 }])
   assert.equal(data.unknownViews,10)
-  assert.equal(captured.at(-1),'BR')
+  assert.equal(captured.at(-2),'BR')
   await handleVisits(request(payload(), { 'x-vercel-ip-country':'BR' }), { ...dependencies, env:{...env,VERCEL:'0'}, command })
-  assert.equal(captured.at(-1),'')
+  assert.equal(captured.at(-2),'')
   await handleVisits(request(payload(), { 'x-vercel-ip-country':'XX' }), { ...dependencies, command })
-  assert.equal(captured.at(-1),'')
+  assert.equal(captured.at(-2),'')
 })
 test('inconsistent country snapshots are rejected',async()=>{
  const response=await handleVisits(request(),{...dependencies,command:async()=>[1,10,5,['BR','11']]})
  assert.equal(response.status,503)
+})
+
+test('Brazilian states use only trusted region headers, without guessing historical states', async () => {
+  let captured: (string | number)[] = []
+  const command = async (value: (string | number)[]) => { captured = value; return [1,100,45,['BR','60','US','30'],['MG','20','SP','10']] }
+  const response = await handleVisits(request(payload(), {'x-vercel-ip-country':'BR','x-vercel-ip-country-region':'MG'}), {...dependencies,command})
+  const data = await response.json()
+  assert.equal(response.status,200)
+  assert.ok(isVisitStats(data))
+  assert.deepEqual(data.brazilStates,[{code:'MG',views:20},{code:'SP',views:10}])
+  assert.equal(data.unknownBrazilStateViews,30)
+  assert.equal(captured.at(-1),'MG')
+  assert.equal(captured.at(-2),'BR')
+  assert.equal(captured.includes('portfolio:production:v1:brazil-states'),true)
+  const invalidHeaders: Record<string, string>[] = [ {'x-vercel-ip-country':'US','x-vercel-ip-country-region':'MG'}, {'x-vercel-ip-country':'BR','x-vercel-ip-country-region':'XX'}, {'x-vercel-ip-country':'BR'} ]
+  for (const headers of invalidHeaders) {
+    await handleVisits(request(payload(),headers), {...dependencies,command})
+    assert.equal(captured.at(-1),'')
+  }
+  await handleVisits(request(payload(),{'x-vercel-ip-country':'BR','x-vercel-ip-country-region':'MG'}), {...dependencies,command,env:{...env,VERCEL:'0'}})
+  assert.equal(captured.at(-1),'')
+})
+
+test('invalid state snapshots stay unavailable and inconsistent client snapshots are rejected',async()=>{
+  for(const states of [['MG','61'],['XX','1'],['MG','1','MG','1'],['MG','-1'],['MG']]) {
+    const response=await handleVisits(request(),{...dependencies,command:async()=>[1,100,45,['BR','60'],states]})
+    assert.equal(response.status,503)
+  }
+  const base={available:true,views:100,uniqueVisitors:45,estimated:true,consentOnly:true,period:'all',countries:[{code:'BR',views:60}],unknownViews:40,updatedAt:new Date(now).toISOString()}
+  assert.equal(isVisitStats({...base,brazilStates:[{code:'MG',views:20}],unknownBrazilStateViews:40}),true)
+  assert.equal(isVisitStats({...base,brazilStates:[{code:'MG',views:20}],unknownBrazilStateViews:30}),false)
 })

@@ -26,7 +26,8 @@ export default function VisitPrivacy() {
           </summary>
           <div className="visit-privacy-details">
             <p>
-              Com autorização, também agregamos visualizações por país usando
+              Com autorização, também agregamos visualizações por país e,
+              no Brasil, por estado usando
               a localização aproximada fornecida pela hospedagem. Não solicitamos
               GPS, não guardamos IPs para geografia e não mostramos localizações
               individuais. Acessos sem país permanecem nos totais.
