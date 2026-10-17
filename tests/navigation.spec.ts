@@ -49,6 +49,7 @@ test('back and forward restore reading position on case study and home', async (
   await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('link', { name: 'Contato' }).click()
   await expect(page).toHaveURL(/\/#contato$/)
   await expect(page.locator('#contato')).toBeFocused()
+  await expect.poll(() => page.locator('#contato').evaluate(element => Math.abs(element.getBoundingClientRect().top))).toBeLessThan(150)
   const contactScroll = await page.evaluate(() => scrollY)
   expect(contactScroll).toBeGreaterThan(2000)
   await page.goBack()
@@ -56,7 +57,7 @@ test('back and forward restore reading position on case study and home', async (
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(1050)
   await page.goForward()
   await expect(page).toHaveURL(/\/#contato$/)
-  await expect.poll(() => page.evaluate(() => Math.abs(scrollY - contactScroll))).toBeLessThan(3)
+  await expect.poll(() => page.evaluate(saved => Math.abs(scrollY - saved), contactScroll)).toBeLessThan(3)
 })
 
 test('direct anchors, legacy URLs and keyboard skip links land on their intended content', async ({ page }) => {

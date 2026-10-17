@@ -5,6 +5,11 @@ import { siteConfig } from './src/data/portfolio'
 import { visitsDevPlugin } from './scripts/visits-dev-plugin'
 
 export default defineConfig(({ mode }) => ({
+  server: {
+    // Playwright traces contain HTML snapshots, not application entry points.
+    // Watching them reloads every open page while tests are still interacting.
+    watch: { ignored: ['**/artifacts/**', '**/test-results/**', '**/playwright-report/**'] },
+  },
   plugins: [react(), tailwindcss(), visitsDevPlugin({ ...process.env, ...loadEnv(mode, process.cwd(), '') }), {
     name: 'portfolio-metadata',
     transformIndexHtml() {

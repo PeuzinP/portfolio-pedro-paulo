@@ -213,7 +213,7 @@ test('configured contact channels use the supplied details and empty channels st
   expect(await resume.getAttribute('download')).toBeNull()
   await expect(page.locator('a[href=""], a[href="#"], a[href^="javascript:"]')).toHaveCount(0)
   await contact.getByRole('link', { name: 'Voltar ao início' }).click()
-  await expect(page).toHaveURL('http://127.0.0.1:5173/')
+  await expect(page).toHaveURL('http://127.0.0.1:5173/#inicio')
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
 })
 

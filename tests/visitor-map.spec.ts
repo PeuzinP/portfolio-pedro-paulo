@@ -4,6 +4,7 @@ async function setup(page: import('@playwright/test').Page, data = stats) {
   await page.route('**/api/visits', r => r.fulfill({json:data}))
   await page.goto('/')
   await page.getByRole('button', {name:'Agora não',exact:true}).click()
+  await page.getByRole('button', {name:'Fechar boas-vindas',exact:true}).click()
   await page.getByRole('heading',{name:'De onde vêm os visitantes'}).scrollIntoViewIfNeeded()
   await expect(page.locator('[data-country="BR"]')).toBeVisible()
 }
@@ -33,8 +34,14 @@ test('mobile touch selection, dragging, controls and no horizontal overflow', as
  const page=await context.newPage(); await setup(page)
  await page.locator('.visitor-ranking').getByRole('button',{name:'Brasil 60'}).tap()
  await expect(page.locator('[data-country="BR"]')).toHaveAttribute('aria-pressed','true')
- const svg=page.locator('.visitor-map-stage svg'); const before=await svg.getAttribute('viewBox')
- const box=(await svg.boundingBox())!; await page.mouse.move(box.x+box.width/2,box.y+box.height/2); await page.mouse.down(); await page.mouse.move(box.x+box.width/2+30,box.y+box.height/2+20,{steps:5}); await page.mouse.up()
+ const svg=page.locator('.visitor-map-stage svg'); await svg.scrollIntoViewIfNeeded(); const before=await svg.getAttribute('viewBox')
+ const box=(await svg.boundingBox())!
+ const touch=await context.newCDPSession(page)
+ const x=box.x+box.width/2,y=box.y+box.height/2
+ // A timed browser gesture avoids an instantaneous synthetic fling suppressing
+ // the next tap; the application still receives the normal touch/pointer events.
+ await touch.send('Input.synthesizeScrollGesture',{x,y,xDistance:-30,yDistance:-20,speed:300,gestureSourceType:'touch',preventFling:true})
+ await touch.detach()
  await expect(svg).not.toHaveAttribute('viewBox',before!)
  await page.getByRole('button',{name:'Visão mundial'}).tap(); await expect(svg).toHaveAttribute('viewBox','0 0 360 180')
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
@@ -75,11 +82,11 @@ test('Brazil hover identifies the correct state and synchronizes real state tota
   const svg=page.locator('.visitor-map-stage svg')
   await expect.poll(async()=>Number((await svg.getAttribute('viewBox'))?.split(' ')[2])).toBeLessThan(150)
   await page.waitForTimeout(400)
+  await svg.scrollIntoViewIfNeeded()
   const point=await svg.evaluate(element=>{const svg=element as SVGSVGElement;const matrix=svg.getScreenCTM()!;const point=new DOMPoint(180-43.94,90+19.92).matrixTransform(matrix);return{x:point.x,y:point.y}})
   await page.mouse.move(point.x,point.y)
   await expect(page.locator('.visitor-tooltip')).toContainText('Minas Gerais (MG) · Brasil · 20 visualizações · 33,3% dos acessos do Brasil')
   await expect(page.locator('.visitor-state-tooltip')).toHaveText('Minas Gerais (MG)')
-  await page.locator('.visitor-map-column').screenshot({path:'artifacts/brazil-states-hover.png'})
   await page.mouse.click(point.x,point.y)
   await expect(mg).toHaveAttribute('aria-pressed','true')
   await expect(page.locator('.visitor-detail h4')).toHaveText('Minas Gerais (MG)')

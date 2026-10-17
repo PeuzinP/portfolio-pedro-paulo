@@ -58,7 +58,7 @@ function AppShell({ route, navigate, navigateToSection, children }: { route: Rou
       if (!main) return false
       // Lazy sections above an anchor change its position as they mount. Restore
       // only once that content exists, including when returning via history.
-      if (main.querySelector('[data-route-pending]')) return false
+      if ((route.section || route.source === 'pop') && main.querySelector('[data-route-pending]')) return false
       const target = route.section ? document.getElementById(route.section) : null
       if (route.source === 'pop' || (route.source === 'initial' && !target)) window.scrollTo({ top: route.scrollY, behavior: 'instant' })
       else if (target) target.scrollIntoView({ behavior: reduced || route.source === 'initial' ? 'instant' : 'smooth', block: 'start' })
