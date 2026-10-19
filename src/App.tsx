@@ -36,7 +36,11 @@ const getRoute = (source: Route['source'] = 'initial'): Route => {
     const legacy = new URL(window.location.hash.slice(1), window.location.origin)
     if (isPortfolioRoute(legacy.pathname)) history.replaceState(history.state, '', `${legacy.pathname}${legacy.search}${legacy.hash}`)
   }
-  const section = window.location.hash.replace(/^#/, '') || undefined
+  const legacySection = window.location.hash.replace(/^#/, '') || undefined
+  // Old shared anchors still work, but the canonical navigation state is kept
+  // in history so normal section navigation never leaves a fragment behind.
+  if (legacySection) history.replaceState({ ...history.state, portfolioSection: legacySection }, '', `${window.location.pathname}${window.location.search}`)
+  const section = legacySection ?? history.state?.portfolioSection
   return { pathname: window.location.pathname.replace(/\/$/, '') || '/', section, scrollY: history.state?.portfolioScrollY ?? 0, source }
 }
 const isPortfolioRoute = (pathname: string) => pathname === '/' || /^\/recrutador\/?$/.test(pathname) || /^\/projetos\/[^/]+\/?$/.test(pathname)
@@ -142,7 +146,7 @@ function Header({ pathname }: { pathname: string }) {
   }, [open])
   return <header className="site-header" ref={header}><div className="container header-inner"><a className="brand" href="/" aria-label="Pedro Paulo, início" onClick={() => setOpen(false)}><span className="brand-symbol">p<span>p</span><i /></span><span>Pedro Paulo<span className="brand-dot">.</span></span></a>
     <button className="mobile-toggle icon-button" ref={toggle} aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="main-navigation" onClick={() => setOpen(!open)}>{open ? <X size={23} /> : <Menu size={23} />}</button>
-    <nav id="main-navigation" className={open ? 'nav-open' : ''} aria-label="Navegação principal">{navigation.map(item => <a key={item.id} href={`/#${item.id}`} className={pathname === '/' && active === item.id ? 'active' : ''} aria-current={pathname === '/' && active === item.id ? 'location' : undefined} onClick={() => setOpen(false)}>{item.label}{item.id === 'contato' && <ArrowUpRight size={14} />}</a>)}</nav>
+    <nav id="main-navigation" className={open ? 'nav-open' : ''} aria-label="Navegação principal">{navigation.map(item => <a key={item.id} href="/" data-section={item.id} className={pathname === '/' && active === item.id ? 'active' : ''} aria-current={pathname === '/' && active === item.id ? 'location' : undefined} onClick={() => setOpen(false)}>{item.label}{item.id === 'contato' && <ArrowUpRight size={14} />}</a>)}</nav>
   </div></header>
 }
 
@@ -174,7 +178,9 @@ export default function App() {
     setRoute({ ...getRoute('push'), scrollY: 0 })
   }
   const navigateToSection = (section: string) => {
-    navigate(new URL(`/#${section}`, window.location.origin))
+    history.replaceState({ ...history.state, portfolioScrollY: window.scrollY }, '')
+    history.pushState({ portfolioScrollY: 0, portfolioSection: section }, '', '/')
+    setRoute({ pathname: '/', section, scrollY: 0, source: 'push' })
   }
   useEffect(() => {
     const previousRestoration = history.scrollRestoration
@@ -210,7 +216,7 @@ export default function App() {
       <motion.h1 {...entrance(.2)}>{headlineWords.slice(0, -2).join(' ')} <span>{headlineWords.slice(-2).join(' ')}<span className="title-dot">.</span></span></motion.h1>
       <motion.p {...entrance(.24)} className="hero-description"><strong>{siteConfig.introduction}</strong></motion.p>
       <motion.p {...entrance(.28)} className="hero-description">{siteConfig.description}</motion.p>
-      <motion.div {...entrance(.36)} className="hero-buttons"><a href="/#projetos" className="button button-primary">Conheça meus projetos <ArrowUpRight size={18} /></a><a href="/#contato" className="button button-quiet">Vamos conversar <ArrowRight size={17} /></a></motion.div>
+      <motion.div {...entrance(.36)} className="hero-buttons"><a href="/" data-section="projetos" className="button button-primary">Conheça meus projetos <ArrowUpRight size={18} /></a><a href="/" data-section="contato" className="button button-quiet">Vamos conversar <ArrowRight size={17} /></a></motion.div>
       <motion.a
         {...entrance(.4)}
         className="recruiter-highlight"
@@ -227,7 +233,7 @@ export default function App() {
       </motion.a>
       <motion.div {...entrance(.43)} className="hero-location"><MapPin size={14} /><span>{siteConfig.location}</span><i /><span>Conectando tecnologia e processos</span></motion.div>
     </div><motion.div {...entrance(.3)} className="hero-diagram"><div className="diagram-overline"><span className="mono">01 / A LÓGICA POR TRÁS</span><span className="little-cross">+</span></div><FlowDiagram /><div className="diagram-under"><span className="mono"><span className="code-brace">{'{ }'}</span> Menos tarefas repetitivas. Mais possibilidades.</span></div></motion.div></div>
-      <div className="container hero-bottom"><a href="/#sobre"><ArrowDown size={16} /> Explore as conexões</a><span className="mono">PESSOAS. PROCESSOS. TECNOLOGIA.</span></div>
+      <div className="container hero-bottom"><a href="/" data-section="sobre"><ArrowDown size={16} /> Explore as conexões</a><span className="mono">PESSOAS. PROCESSOS. TECNOLOGIA.</span></div>
     </section>
     <div className="expertise-strip"><div className="container">{[{ icon: Workflow, text: 'Automação de processos' }, { icon: Braces, text: 'Integração de sistemas' }, { icon: Network, text: 'CRM & jornada do cliente' }, { icon: Code2, text: 'Soluções web' }].map(item => <span key={item.text}><item.icon size={19} />{item.text}</span>)}</div></div>
     <section id="sobre" className="section container">
@@ -270,6 +276,6 @@ export default function App() {
     <DeferredSection><AutomationDemo /></DeferredSection>
     <DeferredSection><BernoulliLab /></DeferredSection>
     <section id="competencias" className="section skills-section"><div className="container"><Reveal><div className="section-heading"><div><p className="eyebrow"><span>04</span> COMPETÊNCIAS</p><h2 className="section-title">As ferramentas mudam.<br />O foco é <span>resolver.</span></h2></div><p className="section-description">Tecnologias organizadas pelo que permitem construir, conectar e melhorar.</p></div><div className="skills-list">{skills.map((skill, i) => { const Icon = skillIcons[i]; return <div className="skill-row" key={skill.title}><span className="skill-index mono">0{i + 1}</span><div className="skill-title"><Icon size={22} /><div><h3>{skill.title}</h3><p>{skill.description}</p></div></div><div className="skill-tags">{skill.items.map(item => <span key={item}>{item}</span>)}</div></div> })}</div></Reveal></div></section>
-    <section id="contato" className="section container contact-section"><Reveal><div className="contact-top"><p className="eyebrow"><span>05</span> PRÓXIMA CONEXÃO</p><span className="contact-location"><MapPin size={14} /> Teresina — PI</span></div><div className="contact-content"><div><h2>Vamos conectar tecnologia à sua <span>próxima solução?</span></h2><p>Estou aberto a oportunidades em automação, integrações, desenvolvimento e melhoria de processos.</p><ContactLinks /></div><div className="contact-art" aria-hidden="true"><div className="contact-orbit" /><span className="contact-icon"><ArrowUpRight size={59} strokeWidth={1.3} /></span><span className="orbit-point" /><span className="contact-art-label mono">a próxima conexão<br />começa com uma conversa.</span></div></div><div className="contact-bottom"><span><Check size={15} /> Processos mais claros. Sistemas mais conectados.</span><a href="/#inicio">Voltar ao início <ChevronUp size={16} /></a></div></Reveal></section>
+    <section id="contato" className="section container contact-section"><Reveal><div className="contact-top"><p className="eyebrow"><span>05</span> PRÓXIMA CONEXÃO</p><span className="contact-location"><MapPin size={14} /> Teresina — PI</span></div><div className="contact-content"><div><h2>Vamos conectar tecnologia à sua <span>próxima solução?</span></h2><p>Estou aberto a oportunidades em automação, integrações, desenvolvimento e melhoria de processos.</p><ContactLinks /></div><div className="contact-art" aria-hidden="true"><div className="contact-orbit" /><span className="contact-icon"><ArrowUpRight size={59} strokeWidth={1.3} /></span><span className="orbit-point" /><span className="contact-art-label mono">a próxima conexão<br />começa com uma conversa.</span></div></div><div className="contact-bottom"><span><Check size={15} /> Processos mais claros. Sistemas mais conectados.</span><a href="/" data-section="inicio">Voltar ao início <ChevronUp size={16} /></a></div></Reveal></section>
   </main><footer className="site-footer"><PortfolioStats /><div className="container"><a className="footer-name" href="/">Pedro Paulo<span>.</span></a><p>Conectando sistemas, automatizando processos.</p><span className="mono">Feito com intenção e código.</span></div><VisitPrivacy /></footer><WelcomeToast /></AppShell>
 }

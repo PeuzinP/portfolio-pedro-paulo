@@ -123,31 +123,24 @@ test('state geometry failure can retry without hiding the country map',async({pa
  await expect(page.locator('[data-state]')).toHaveCount(27)
 })
 
-test('map dots and focus borders remain small at state zoom and on resize', async ({page}) => {
+test('map has no decorative SVG marker and focus borders remain small at state zoom and on resize', async ({page}) => {
   await setup(page)
   const svg = page.locator('.visitor-map-stage svg')
-  const dotSpacing = () => page.locator('#visitor-dots').evaluate(element => {
-    const pattern = element as SVGPatternElement
-    return pattern.width.baseVal.value * pattern.patternTransform.baseVal.consolidate()!.matrix.a * pattern.ownerSVGElement!.getScreenCTM()!.a
-  })
-  await expect.poll(dotSpacing).toBeCloseTo(4, 1)
+  await expect(svg.locator('circle')).toHaveCount(0)
   await page.getByRole('button', {name:'Explorar estados do Brasil',exact:true}).click()
   const pi = page.locator('[data-state="PI"]')
   await expect(pi).toBeVisible()
   await pi.focus(); await page.keyboard.press('Enter')
   await expect(pi).toHaveAttribute('aria-pressed','true')
   await expect.poll(async () => Number((await svg.getAttribute('viewBox'))?.split(' ')[2])).toBeLessThan(35)
-  await expect.poll(dotSpacing).toBeCloseTo(4, 1)
   expect(await pi.evaluate(element => getComputedStyle(element).stroke)).toBe('none')
   const border = page.locator('[data-state="PI"] + .visitor-state-border')
   await expect(border).toHaveAttribute('vector-effect','non-scaling-stroke')
   expect(await border.evaluate(element => parseFloat(getComputedStyle(element).strokeWidth))).toBeLessThanOrEqual(1.5)
   await page.locator('.visitor-map-column').screenshot({path:'artifacts/brazil-states-piaui-fixed.png'})
   await page.setViewportSize({width:375,height:812})
-  await expect.poll(dotSpacing).toBeCloseTo(4, 1)
   await page.getByRole('button',{name:'Visão mundial',exact:true}).click()
   await expect(svg).toHaveAttribute('viewBox','0 0 360 180')
-  await expect.poll(dotSpacing).toBeCloseTo(4, 1)
 })
 
 test('long state tooltips stay inside the map at narrow and wide widths', async ({page}) => {

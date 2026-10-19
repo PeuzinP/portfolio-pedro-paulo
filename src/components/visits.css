@@ -64,8 +64,8 @@ body:has(.site-header .nav-open) .welcome-toast { visibility:hidden; }
 .site-footer .visitor-section p { font-size:12px; line-height:1.7; color:#95a7b2; }
 .visitor-explorer { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:24px; margin-top:24px; }
 .visitor-map-column { min-width:0; }
-.visitor-map-stage { aspect-ratio:2; overflow:hidden; border:1px solid #30444d; border-radius:8px; background:#101920; display:grid; place-items:center; }
-.visitor-map-stage svg { width:100%; height:100%; display:block; }
+.visitor-map-stage { aspect-ratio:2; overflow:hidden; border:1px solid #30444d; border-radius:8px; background:#101920; display:grid; place-items:center; contain:layout paint; }
+.visitor-map-stage svg { width:100%; height:100%; display:block; contain:layout paint; }
 .visitor-map-stage path { cursor:pointer; }
 .visitor-section button { font:inherit; font-size:12px; color:#b9cdcf; background:#16232c; border:1px solid #40555f; border-radius:5px; min-height:44px; padding:8px 12px; cursor:pointer; }
 .visitor-section button:hover,.visitor-section button[aria-pressed='true'] { color:#b9ffff; border-color:#65d9d8; background:#20383d; }
@@ -83,7 +83,7 @@ body:has(.site-header .nav-open) .welcome-toast { visibility:hidden; }
 .visitor-ranking li { margin:6px 0; }
 .visitor-ranking button { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; text-align:left; }
 .visitor-placeholder { min-height:360px; display:grid; place-items:center; border:1px solid #30444d; border-radius:8px; }
-@media(max-width:767px) { .visitor-explorer { grid-template-columns:1fr; } .visitor-section { min-height:700px; } }
+@media(max-width:767px) { .visitor-explorer { grid-template-columns:1fr; } .visitor-section { min-height:700px; } .visitor-map-stage { touch-action:pan-y; } .visitor-sidebar { display:grid; gap:16px; } .visitor-detail { margin-bottom:0; } .visitor-state-tooltip { display:none; } }
 @media(prefers-reduced-motion:reduce) { .visitor-section * { transition:none!important; animation:none!important; } }
 .visitor-map-stage path:focus-visible { outline:none; }
 .visitor-map-stage { position:relative; }
