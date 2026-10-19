@@ -89,6 +89,7 @@ test('Brazil hover identifies the correct state and synchronizes real state tota
   await expect(page.locator('.visitor-state-tooltip')).toHaveText('Minas Gerais (MG)')
   await page.mouse.click(point.x,point.y)
   await expect(mg).toHaveAttribute('aria-pressed','true')
+  expect(await mg.evaluate(element => getComputedStyle(element).outlineStyle)).toBe('none')
   await expect(page.locator('.visitor-detail h4')).toHaveText('Minas Gerais (MG)')
   await expect(page.locator('.visitor-states-panel')).toContainText('Estado não identificado: 30')
   await page.getByLabel('Explorar um estado',{exact:true}).selectOption('DF')
