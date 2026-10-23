@@ -1,11 +1,11 @@
 export const siteConfig = {
   name: 'Pedro Paulo',
   location: 'Teresina – PI',
-  positioning: 'Automação, Integrações e Desenvolvimento',
+  positioning: 'Desenvolvedor Full Stack',
   headline: 'Olá, sou Pedro Paulo.',
-  introduction: 'Desenvolvo tecnologia para conectar sistemas, automatizar processos e simplificar operações.',
+  introduction: 'Desenvolvedor Full Stack com foco em aplicações web, integrações e automação de processos.',
   description:
-    'Atuo com automação, integrações via APIs e desenvolvimento de soluções digitais. Tenho facilidade em identificar oportunidades de melhoria, estruturar projetos e criar ferramentas que resolvem problemas reais, unindo conhecimento técnico e visão de negócio.',
+    'Atuo no desenvolvimento de soluções para demandas reais da operação educacional, comercial e administrativa, da compreensão dos requisitos à implementação de interfaces, processamento de dados e regras de negócio.',
   contacts: {
     email: 'ppmendes1519@gmail.com',
     linkedin: 'https://www.linkedin.com/in/pedro-mendes-720830270/',
@@ -245,7 +245,7 @@ export const skills: { title: string; description: string; items: string[] }[] =
   {
     title: 'Desenvolvimento',
     description: 'Construir interfaces, scripts e soluções para necessidades reais.',
-    items: ['JavaScript', 'Python', 'PHP', 'HTML', 'CSS'],
+    items: ['JavaScript', 'TypeScript', 'React', 'Vite', 'Python', 'FastAPI', 'HTML', 'CSS'],
   },
   {
     title: 'Dados',
@@ -260,7 +260,7 @@ export const skills: { title: string; description: string; items: string[] }[] =
   {
     title: 'Ferramentas',
     description: 'Versionar o trabalho e colaborar na construção das soluções.',
-    items: ['Git', 'GitHub', 'Microsoft 365'],
+    items: ['Git', 'GitHub', 'PHP/Laravel', 'Java/Spring', 'Angular', 'Microsoft 365'],
   },
 ]
 

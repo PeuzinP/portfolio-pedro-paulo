@@ -152,7 +152,7 @@ export default function RecruiterPage() {
           <p>
             <strong>Análise e Desenvolvimento de Sistemas — Superior</strong>
             <br />
-            Anhanguera · Concluído
+            Unopar / Anhanguera · Concluído em 2025
           </p>
           <p>
             <strong>Engenharia de Software — Pós-graduação</strong>
